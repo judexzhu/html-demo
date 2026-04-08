@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARO HCP Swift Network Architecture</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117;
+    --bg2: #161b26;
+    --bg3: #1e2435;
+    --border: rgba(255,255,255,0.08);
+    --border-hi: rgba(255,255,255,0.18);
+    --text: #e2e8f0;
+    --text-muted: #8892a4;
+    --text-dim: #5a6478;
+    --blue: #3b82f6;
+    --blue-dim: rgba(59,130,246,0.15);
+    --blue-border: rgba(59,130,246,0.35);
+    --teal: #14b8a6;
+    --teal-dim: rgba(20,184,166,0.12);
+    --teal-border: rgba(20,184,166,0.3);
+    --amber: #f59e0b;
+    --amber-dim: rgba(245,158,11,0.12);
+    --amber-border: rgba(245,158,11,0.3);
+    --purple: #a78bfa;
+    --purple-dim: rgba(167,139,250,0.12);
+    --purple-border: rgba(167,139,250,0.3);
+    --red: #f87171;
+    --red-dim: rgba(248,113,113,0.1);
+    --green: #4ade80;
+    --green-dim: rgba(74,222,128,0.1);
+    --green-border: rgba(74,222,128,0.25);
+    --cyan: #22d3ee;
+    --cyan-dim: rgba(34,211,238,0.12);
+    --cyan-border: rgba(34,211,238,0.3);
+    --radius: 10px;
+    --radius-lg: 14px;
+  }
+
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
+    font-size: 13px; line-height: 1.6; min-height: 100vh; padding: 32px 24px 48px;
+  }
+
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 16px; flex-wrap: wrap; }
+  .page-title { font-size: 18px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+  .page-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .scope-banner {
+    background: var(--amber-dim); border: 1px solid var(--amber-border);
+    border-radius: var(--radius); padding: 9px 14px; font-size: 11px;
+    color: #fcd34d; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.6;
+  }
+  .scope-banner strong { color: #fde68a; }
+
+  .legend {
+    display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; padding: 10px 14px;
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
+  }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; flex-shrink: 0; }
+
+  .hint { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 10px; letter-spacing: 0.03em; }
+
+  /* ── Node ── */
+  .node {
+    display: inline-flex; flex-direction: column; align-items: center;
+    cursor: pointer; flex-shrink: 0; transition: transform 0.15s;
+  }
+  .node:hover { transform: translateY(-2px); }
+  .node:hover .nb { border-color: var(--border-hi); }
+  .nb {
+    border-radius: var(--radius); border: 1px solid var(--border);
+    background: var(--bg3); padding: 8px 14px; text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s; white-space: nowrap;
+  }
+  .nb.active { border-color: var(--blue-border); box-shadow: 0 0 0 3px var(--blue-dim); animation: pulse 0.4s ease-out; }
+  .nb.oval { border-radius: 999px; padding: 8px 18px; }
+  .nb.pill { border-radius: 24px; padding: 10px 20px; }
+  .nl { font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .ns { font-size: 10px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; }
+
+  .nb.c-blue   { background: var(--blue-dim);   border-color: var(--blue-border); }
+  .nb.c-teal   { background: var(--teal-dim);   border-color: var(--teal-border); }
+  .nb.c-amber  { background: var(--amber-dim);  border-color: var(--amber-border); }
+  .nb.c-purple { background: var(--purple-dim); border-color: var(--purple-border); }
+  .nb.c-green  { background: var(--green-dim);  border-color: var(--green-border); }
+  .nb.c-cyan   { background: var(--cyan-dim);   border-color: var(--cyan-border); }
+
+  .nb.c-blue .nl   { color: #93c5fd; }
+  .nb.c-teal .nl   { color: #5eead4; }
+  .nb.c-amber .nl  { color: #fcd34d; }
+  .nb.c-purple .nl { color: #c4b5fd; }
+  .nb.c-green .nl  { color: var(--green); }
+  .nb.c-cyan .nl   { color: var(--cyan); }
+
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 var(--blue-dim); }
+    70% { box-shadow: 0 0 0 8px transparent; }
+    100% { box-shadow: 0 0 0 0 transparent; }
+  }
+
+  /* ── Horizontal arrow ── */
+  .ha { display: flex; align-items: center; min-width: 32px; flex: 0 0 auto; }
+  .ha-line { height: 1px; background: var(--border-hi); flex: 1; min-width: 20px; position: relative; }
+  .ha-head { width: 0; height: 0; border: 5px solid transparent; border-left-color: var(--border-hi); flex-shrink: 0; }
+  .ha-label {
+    position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; color: var(--text-dim); white-space: nowrap; background: var(--bg2); padding: 0 4px;
+  }
+
+  /* ── Vertical arrow ── */
+  .va { display: flex; flex-direction: column; align-items: center; }
+  .va-line { width: 1px; background: var(--border-hi); min-height: 24px; position: relative; }
+  .va-head { width: 0; height: 0; border: 5px solid transparent; border-top-color: var(--border-hi); }
+  .va-head-up { width: 0; height: 0; border: 5px solid transparent; border-bottom-color: var(--border-hi); }
+  .va-label {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 10px; color: var(--text-dim); white-space: nowrap; background: var(--bg2); padding: 0 4px;
+  }
+
+  /* ── Layout ── */
+  .topo {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 28px 24px 24px; margin-bottom: 20px; overflow-x: auto;
+  }
+  .topo-inner { min-width: 800px; }
+
+  .zone {
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 24px 20px 20px; position: relative;
+  }
+  .zone-lbl {
+    position: absolute; top: -10px; left: 16px; background: var(--bg2);
+    padding: 0 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
+  }
+
+  .pod-box {
+    border: 1px dashed var(--border-hi); border-radius: var(--radius);
+    padding: 14px 16px; position: relative; background: rgba(255,255,255,0.015);
+  }
+  .pod-lbl {
+    position: absolute; top: -9px; left: 12px; background: var(--bg2);
+    padding: 0 6px; font-size: 9px; color: var(--text-dim); letter-spacing: 0.04em;
+  }
+
+  .row { display: flex; align-items: center; }
+  .row-c { display: flex; align-items: center; justify-content: center; }
+  .col { display: flex; flex-direction: column; align-items: center; }
+  .gap-8 { gap: 8px; }
+  .gap-12 { gap: 12px; }
+  .gap-16 { gap: 16px; }
+  .gap-20 { gap: 20px; }
+
+  /* ── Detail panel ── */
+  .detail-panel {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 20px; min-height: 130px;
+  }
+  .detail-panel h3 {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+  }
+  .detail-panel h3 .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .detail-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .detail-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .detail-card-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 6px; }
+  .detail-card-body { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+  .detail-card-body code { color: var(--amber); font-size: 11px; background: rgba(245,158,11,0.08); padding: 1px 4px; border-radius: 3px; }
+  .detail-card-body .warn { color: var(--red); }
+  .detail-card-body .ok { color: var(--green); }
+
+  .ref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .ref-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+  .ref-card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 10px; }
+  .ref-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid var(--border); gap: 8px; }
+  .ref-item:last-child { border-bottom: none; }
+  .ref-item-label { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
+  .ref-item-val { color: var(--text); font-size: 11px; text-align: right; }
+  .ref-item-val code { color: var(--amber); font-size: 10px; }
+
+  .kcs-bar {
+    background: var(--blue-dim); border: 1px solid var(--blue-border);
+    border-radius: var(--radius); padding: 10px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 8px; font-size: 11px; color: #93c5fd;
+  }
+  .kcs-bar a { color: var(--blue); text-decoration: none; border-bottom: 1px solid var(--blue-border); }
+  .kcs-bar a:hover { border-bottom-color: var(--blue); }
+
+  /* ── Comparison table ── */
+  .cmp-table {
+    width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px;
+  }
+  .cmp-table th {
+    text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border);
+    color: var(--text-dim); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; font-size: 10px;
+  }
+  .cmp-table td {
+    padding: 6px 10px; border-bottom: 1px solid var(--border); color: var(--text-muted);
+  }
+  .cmp-table tr:last-child td { border-bottom: none; }
+</style>
+</head>
+<body>
+
+<a href="../index.html" style="display:inline-block;margin-bottom:12px;font-size:12px;color:var(--text-muted);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">&larr; All Diagrams</a>
+
+<div class="page-header">
+  <div>
+    <div class="page-title">ARO HCP Swift Network Architecture</div>
+    <div class="page-subtitle">How Swift (VNet Integration) enables fully private control plane access to customer Key Vault.</div>
+  </div>
+</div>
+
+<div class="scope-banner">
+  <span>⚠</span>
+  <span><strong>ARO HCP with Swift.</strong> Swift allows the ARO HCP control plane to inject a NIC directly into a delegated subnet in the customer's VNet. This eliminates public internet exposure for Key Vault access — all etcd encryption key operations stay on Azure's private backbone.</span>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-dim);border-color:var(--blue-border)"></div> Control Plane (Management)</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--teal-dim);border-color:var(--teal-border)"></div> Swift / VNet Integration</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--cyan-dim);border-color:var(--cyan-border)"></div> Networking (VNet / Subnet)</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--purple-dim);border-color:var(--purple-border)"></div> Private Link / DNS</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--amber-dim);border-color:var(--amber-border)"></div> Key Vault / Encryption</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--green-dim);border-color:var(--green-border)"></div> Worker Nodes / Workloads</div>
+</div>
+
+<p class="hint">Click any component to see details</p>
+
+<!-- ════════════════ TOPOLOGY ════════════════ -->
+<div class="topo">
+<div class="topo-inner">
+
+  <!-- ═══ ARO HCP CONTROL PLANE (Management Cluster) ═══ -->
+  <div class="zone" style="border-color:var(--blue-border); margin-bottom:0;">
+    <div class="zone-lbl" style="color:#93c5fd;">ARO HCP Control Plane (Management Cluster)</div>
+    <div class="row-c gap-16">
+      <div class="node" onclick="selectNode('control-plane')">
+        <div class="nb c-blue" id="box-control-plane"><div class="nl">ARO HCP Control Plane</div><div class="ns">kube-apiserver &middot; etcd &middot; controllers</div></div>
+      </div>
+      <div class="ha" style="width:56px;">
+        <div class="ha-line"><span class="ha-label">KMS operator</span></div>
+        <div class="ha-head"></div>
+      </div>
+      <div class="node" onclick="selectNode('kms-identity')">
+        <div class="nb c-blue" id="box-kms-identity"><div class="nl">KMS Managed Identity</div><div class="ns">Key Vault Crypto User role</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ NIC Injection arrow ═══ -->
+  <div class="col" style="margin:0 auto;">
+    <div class="va"><div class="va-line" style="min-height:20px;"><span class="va-label">NIC injection (Swift)</span></div><div class="va-head"></div></div>
+  </div>
+
+  <!-- ═══ CUSTOMER VNET ═══ -->
+  <div class="zone" style="border-color:var(--cyan-border);">
+    <div class="zone-lbl" style="color:var(--cyan);">Customer VNet (10.0.0.0/16)</div>
+
+    <!-- Two subnets side by side, centered -->
+    <div class="row-c gap-20" style="align-items:flex-start; flex-wrap:nowrap;">
+
+      <!-- Left: VNet Integration Subnet -->
+      <div class="col gap-12" style="flex-shrink:0;">
+        <div class="pod-box" style="border-color:var(--teal-border);">
+          <div class="pod-lbl" style="color:var(--teal);">VNet Integration Subnet (10.0.1.0/24)</div>
+          <div class="col gap-8">
+            <div class="node" onclick="selectNode('integration-subnet')">
+              <div class="nb c-teal" id="box-integration-subnet">
+                <div class="nl">Delegated Subnet</div>
+                <div class="ns">Microsoft.RedHatOpenShift/</div>
+                <div class="ns">hcpOpenShiftClusters</div>
+              </div>
+            </div>
+            <div class="va"><div class="va-line" style="min-height:12px;"></div><div class="va-head"></div></div>
+            <div class="node" onclick="selectNode('injected-nic')">
+              <div class="nb c-teal oval" id="box-injected-nic">
+                <div class="nl">Injected NIC</div>
+                <div class="ns">10.0.1.x &middot; private IP</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Middle: arrows between subnets -->
+      <div class="col gap-12" style="padding-top:80px; flex-shrink:0;">
+        <div class="ha" style="width:64px;">
+          <div class="ha-line"><span class="ha-label">private backbone</span></div>
+          <div class="ha-head"></div>
+        </div>
+      </div>
+
+      <!-- Right: Customer Subnet -->
+      <div class="col gap-12" style="flex-shrink:0;">
+        <div class="pod-box">
+          <div class="pod-lbl">Customer Subnet (10.0.0.0/24)</div>
+
+          <div class="row-c gap-16" style="flex-wrap:wrap;">
+            <!-- Private Endpoint + DNS stack -->
+            <div class="col gap-8">
+              <div class="node" onclick="selectNode('private-endpoint')">
+                <div class="nb c-purple" id="box-private-endpoint">
+                  <div class="nl">Private Endpoint</div>
+                  <div class="ns">10.0.0.x &middot; vault group</div>
+                </div>
+              </div>
+              <div class="va"><div class="va-line" style="min-height:12px;"><span class="va-label">Private Link</span></div><div class="va-head"></div></div>
+              <div class="node" onclick="selectNode('keyvault')">
+                <div class="nb c-amber" id="box-keyvault">
+                  <div class="nl">Key Vault</div>
+                  <div class="ns">publicNetworkAccess: Disabled</div>
+                </div>
+              </div>
+              <div class="va"><div class="va-line" style="min-height:8px;"></div><div class="va-head"></div></div>
+              <div class="node" onclick="selectNode('etcd-key')">
+                <div class="nb c-amber" id="box-etcd-key" style="padding:6px 12px;">
+                  <div class="nl">etcd-data-kms-encryption-key</div>
+                  <div class="ns">RSA 2048-bit</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Worker nodes -->
+            <div class="col gap-8">
+              <div class="node" onclick="selectNode('workers')">
+                <div class="nb c-green" id="box-workers">
+                  <div class="nl">Worker Nodes</div>
+                  <div class="ns">Standard_D8s_v3 &times; 2</div>
+                </div>
+              </div>
+              <div class="node" onclick="selectNode('nsg')">
+                <div class="nb c-cyan" id="box-nsg" style="padding:6px 12px;">
+                  <div class="nl">NSG</div>
+                  <div class="ns">customer-nsg</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Private DNS Zone below, centered -->
+    <div class="col" style="margin-top:16px;">
+      <div class="node" onclick="selectNode('private-dns')">
+        <div class="nb c-purple" id="box-private-dns" style="padding:8px 16px;">
+          <div class="nl">Private DNS Zone</div>
+          <div class="ns">privatelink.vaultcore.azure.net</div>
+          <div class="ns">VNet Link &middot; auto-registered A record</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<!-- Detail panel -->
+<div class="detail-panel" id="detail-panel">
+  <div id="detail-hint" style="font-size:12px;color:var(--text-muted);">&larr; Select a component above to see details.</div>
+  <div class="detail-content" id="detail-content" style="display:none;"></div>
+</div>
+
+<!-- Reference cards -->
+<div class="ref-grid">
+  <div class="ref-card">
+    <div class="ref-card-title">Address Layout</div>
+    <div class="ref-item"><span class="ref-item-label">VNet</span><span class="ref-item-val"><code>10.0.0.0/16</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Customer Subnet</span><span class="ref-item-val"><code>10.0.0.0/24</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">VNet Integration</span><span class="ref-item-val"><code>10.0.1.0/24</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Pod CIDR</span><span class="ref-item-val"><code>10.128.0.0/14</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Service CIDR</span><span class="ref-item-val"><code>172.30.0.0/16</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Machine CIDR</span><span class="ref-item-val"><code>10.0.0.0/16</code></span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">Standard vs Swift</div>
+    <table class="cmp-table">
+      <tr><th></th><th>Standard</th><th>Swift</th></tr>
+      <tr><td>Key Vault</td><td>Public access</td><td>Private only</td></tr>
+      <tr><td>KMS visibility</td><td>(default public)</td><td><code>Private</code></td></tr>
+      <tr><td>Integration subnet</td><td>Not needed</td><td>Required + delegated</td></tr>
+      <tr><td>Private endpoint</td><td>Not needed</td><td>Required</td></tr>
+      <tr><td>API version</td><td><code>2024-06-10</code></td><td><code>2025-12-23</code></td></tr>
+    </table>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">Key RBAC Roles</div>
+    <div class="ref-item"><span class="ref-item-label">KMS MI</span><span class="ref-item-val">Key Vault Crypto User</span></div>
+    <div class="ref-item"><span class="ref-item-label">Cluster API MI</span><span class="ref-item-val">HCP Cluster API Provider</span></div>
+    <div class="ref-item"><span class="ref-item-label">Control Plane MI</span><span class="ref-item-val">HCP CP Operator</span></div>
+    <div class="ref-item"><span class="ref-item-label">Service MI</span><span class="ref-item-val">Network Contributor</span></div>
+    <div class="ref-item"><span class="ref-item-label">Identities total</span><span class="ref-item-val">10 CP + 3 dataplane</span></div>
+  </div>
+
+  <div class="ref-card">
+    <div class="ref-card-title">Verification</div>
+    <div class="ref-item"><span class="ref-item-label">KMS visibility</span><span class="ref-item-val"><code>az rest ... | jq '.properties.etcd...kms'</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Integration subnet</span><span class="ref-item-val"><code>jq '.properties.platform.vnetIntegrationSubnetId'</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">KV access</span><span class="ref-item-val"><code>az keyvault show --query publicNetworkAccess</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Outbound type</span><span class="ref-item-val"><code>LoadBalancer</code></span></div>
+  </div>
+</div>
+
+<div class="kcs-bar">
+  <span>📄 Deployed via bicep templates: customer-infra.bicep → cluster.bicep → nodepool.bicep</span>
+</div>
+
+<script>
+var nodeData = {
+  'control-plane': { color: '#3b82f6', title: 'ARO HCP Control Plane', cards: [
+    { title: 'Role', body: 'The hosted control plane running in the ARO management cluster. Contains kube-apiserver, etcd, controllers, and operators. In a separate network from the customer VNet.' },
+    { title: 'Swift integration', body: 'With Swift enabled, the control plane injects a NIC into the customer\'s <strong>VNet Integration Subnet</strong>. This NIC gets a private IP (10.0.1.x) and allows the control plane to reach private resources without public internet.' },
+    { title: 'Etcd encryption', body: 'Uses <code>CustomerManaged</code> KMS encryption. The KMS operator uses the KMS managed identity to access the Key Vault and encrypt/decrypt etcd data. With Swift, KMS visibility is set to <code>Private</code>.' },
+    { title: 'HA', body: 'Control plane runs with multiple replicas in the management cluster. Each replica can access the customer VNet through the injected NIC. Managed by <code>Microsoft.RedHatOpenShift/hcpOpenShiftClusters</code> resource provider.' },
+  ]},
+  'kms-identity': { color: '#3b82f6', title: 'KMS Managed Identity', cards: [
+    { title: 'Role', body: 'A user-assigned managed identity specifically for KMS (Key Management Service) operations. Named <code>{clusterName}-cp-kms-{suffix}</code>.' },
+    { title: 'RBAC', body: 'Assigned the <strong>Key Vault Crypto User</strong> role (<code>12338af0-0e69-4776-bea7-57ae8d297424</code>). This grants encrypt, decrypt, wrap, and unwrap permissions — nothing more.' },
+    { title: 'Scope', body: 'Role assigned at the Key Vault scope. Cannot access other Key Vaults or perform non-crypto operations. Follows least-privilege principle.' },
+    { title: 'How it works', body: 'The KMS operator in the control plane authenticates as this identity, then calls Key Vault via the private endpoint to encrypt/decrypt the etcd encryption key.' },
+  ]},
+  'integration-subnet': { color: '#14b8a6', title: 'VNet Integration Subnet', cards: [
+    { title: 'Purpose', body: 'The <strong>key enabler of Swift</strong>. This subnet has a delegation to <code>Microsoft.RedHatOpenShift/hcpOpenShiftClusters</code>, which grants the ARO HCP service permission to inject a NIC directly into the customer\'s VNet.' },
+    { title: 'Configuration', body: 'Address: <code>10.0.1.0/24</code> (minimum /24 required). Delegation name: <code>aro-hcp-delegation</code>. <span class="warn">No NSG applied</span> — traffic control is handled by the injected NIC\'s rules.' },
+    { title: 'Restrictions', body: '<span class="warn">Dedicated subnet only — no other resources can be deployed here.</span> The delegation reserves the subnet exclusively for ARO HCP control plane NIC injection.' },
+    { title: 'Bicep', body: 'Defined in <code>customer-infra.bicep</code> as a subnet of the customer VNet with <code>delegations</code> array containing the <code>Microsoft.RedHatOpenShift/hcpOpenShiftClusters</code> service delegation.' },
+  ]},
+  'injected-nic': { color: '#14b8a6', title: 'Injected NIC', cards: [
+    { title: 'What it is', body: 'A network interface card injected by the ARO HCP control plane into the VNet Integration Subnet. Gets a <strong>private IP from 10.0.1.0/24</strong>.' },
+    { title: 'Purpose', body: 'Makes the control plane a direct participant in the customer\'s VNet. The NIC can reach any private resource in the VNet — specifically the Key Vault private endpoint at 10.0.0.x.' },
+    { title: 'Traffic flow', body: 'Control Plane → Injected NIC (10.0.1.x) → Private DNS resolves to 10.0.0.x → Private Endpoint → Private Link → Key Vault. <span class="ok">All on Azure private backbone.</span>' },
+    { title: 'Security', body: 'The NIC is managed by the ARO service, not the customer. No NSG is applied to the integration subnet — the NIC has its own implicit rules managed by the platform.' },
+  ]},
+  'private-endpoint': { color: '#a78bfa', title: 'Private Endpoint', cards: [
+    { title: 'Purpose', body: 'Creates a private IP address for Key Vault inside the customer subnet (10.0.0.0/24). This allows the control plane to reach Key Vault without traversing the public internet.' },
+    { title: 'Configuration', body: 'Name: <code>kv-private-endpoint</code>. Group ID: <code>vault</code>. Deployed in the customer subnet. Connected to the Key Vault via Private Link service.' },
+    { title: 'Condition', body: 'Only created when <code>privateKeyVault=true</code> (Swift mode). In standard mode, the control plane accesses Key Vault via its public endpoint.' },
+    { title: 'DNS integration', body: 'The Private DNS Zone Group auto-registers an A record mapping <code>{vault-name}.vault.azure.net</code> → private endpoint IP. This ensures DNS resolution returns the private IP, not the public one.' },
+  ]},
+  'keyvault': { color: '#f59e0b', title: 'Key Vault', cards: [
+    { title: 'Purpose', body: 'Stores the etcd encryption key used by the ARO HCP control plane. With Swift, <code>publicNetworkAccess</code> is set to <strong>Disabled</strong> — the vault is completely disconnected from the public internet.' },
+    { title: 'Configuration', body: 'Name: <code>cust-kv-{randomSuffix}</code>. SKU: Standard. RBAC authorization enabled. Soft delete disabled. Tenant: subscription tenant.' },
+    { title: 'Security', body: '<span class="ok">With Swift + private endpoint, the Key Vault has zero public attack surface.</span> All access goes through the private endpoint on Azure\'s backbone. DNS hijacking is prevented by the private DNS zone.' },
+    { title: 'Standard vs Swift', body: '<strong>Standard:</strong> <code>publicNetworkAccess: Enabled</code>, control plane uses public endpoint.<br><strong>Swift:</strong> <code>publicNetworkAccess: Disabled</code>, control plane uses private endpoint via injected NIC.' },
+  ]},
+  'etcd-key': { color: '#f59e0b', title: 'Etcd Encryption Key', cards: [
+    { title: 'Purpose', body: 'The actual KMS key used to encrypt/decrypt etcd data at rest. Customer-managed encryption gives full control over the key lifecycle.' },
+    { title: 'Configuration', body: 'Name: <code>etcd-data-kms-encryption-key</code>. Type: RSA, 2048-bit. Stored in the customer\'s Key Vault.' },
+    { title: 'KMS visibility', body: 'The cluster resource has <code>etcd.dataEncryption.customerManaged.kms.visibility</code> set to <code>Private</code> in Swift mode. This tells the control plane to use the private network path.' },
+    { title: 'Access flow', body: 'KMS operator (using KMS MI) → Injected NIC → Private DNS → Private Endpoint → Key Vault → etcd-data-kms-encryption-key. All private, zero public internet.' },
+  ]},
+  'workers': { color: '#4ade80', title: 'Worker Nodes', cards: [
+    { title: 'Configuration', body: 'VM Size: <code>Standard_D8s_v3</code>. OS Disk: 64 GiB (<code>StandardSSD_LRS</code>). Replicas: 2. Deployed in the customer subnet (10.0.0.0/24).' },
+    { title: 'Node pool', body: 'Created as <code>Microsoft.RedHatOpenShift/hcpOpenShiftClusters/nodePools</code>. Name: <code>np-1</code>. Version: 4.20.16. Uses the customer subnet specified in the cluster platform configuration.' },
+    { title: 'Networking', body: 'Worker nodes use the customer subnet with NSG applied. Pod CIDR: <code>10.128.0.0/14</code>. Service CIDR: <code>172.30.0.0/16</code>. Outbound type: <code>LoadBalancer</code>.' },
+    { title: 'Managed identities', body: '3 dataplane managed identities via OIDC federation: disk-csi-driver, file-csi-driver, image-registry. These handle storage and registry operations on the worker nodes.' },
+  ]},
+  'nsg': { color: '#22d3ee', title: 'Network Security Group', cards: [
+    { title: 'Purpose', body: 'Controls ingress/egress traffic for the customer subnet where worker nodes and the private endpoint reside. Name: <code>customer-nsg</code>.' },
+    { title: 'Applied to', body: 'Customer subnet (10.0.0.0/24) only. <span class="warn">NOT applied to the VNet Integration Subnet</span> — that subnet has no NSG by design.' },
+    { title: 'RBAC', body: 'Multiple managed identities have role assignments on the NSG: Cloud Controller Manager, File CSI Driver, HCP Service MI, and HCP CP Operator all need NSG access for various operations.' },
+    { title: 'Rules', body: 'No explicit rules defined in the bicep template — rules are managed separately or by the ARO service. The NSG resource itself is the anchor for RBAC role assignments.' },
+  ]},
+  'private-dns': { color: '#a78bfa', title: 'Private DNS Zone', cards: [
+    { title: 'Purpose', body: 'Ensures that <code>*.vault.azure.net</code> resolves to the private endpoint IP instead of the public IP. Zone: <code>privatelink.vaultcore.azure.net</code>.' },
+    { title: 'VNet Link', body: 'Linked to the customer VNet with registration disabled. This makes the DNS zone visible to all resources in the VNet, including the injected NIC from the control plane.' },
+    { title: 'Auto-registration', body: 'A Private DNS Zone Group (<code>kv-private-ep-dns-group</code>) automatically registers an A record for the private endpoint. No manual DNS configuration needed.' },
+    { title: 'Security', body: '<span class="ok">Prevents DNS hijacking.</span> When the control plane resolves the Key Vault FQDN, the private DNS zone intercepts and returns the private IP. The request never reaches public DNS.' },
+  ]},
+};
+
+var activeNode = null;
+function selectNode(id) {
+  document.querySelectorAll('.nb.active').forEach(function(el) { el.classList.remove('active'); });
+  activeNode = id;
+  var box = document.getElementById('box-' + id);
+  if (box) box.classList.add('active');
+  var data = nodeData[id];
+  if (!data) return;
+  document.getElementById('detail-hint').style.display = 'none';
+  var content = document.getElementById('detail-content');
+  content.style.display = 'grid';
+  var panel = document.getElementById('detail-panel');
+  var existing = panel.querySelector('h3');
+  if (existing) existing.remove();
+  var h3 = document.createElement('h3');
+  h3.innerHTML = '<div class="dot" style="background:' + data.color + '"></div>' + data.title;
+  panel.insertBefore(h3, content);
+  content.innerHTML = data.cards.map(function(c) {
+    return '<div class="detail-card"><div class="detail-card-title">' + c.title + '</div><div class="detail-card-body">' + c.body + '</div></div>';
+  }).join('');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+</body>
+</html>

@@ -41,13 +41,9 @@
   }
 
   body {
-    background: var(--bg);
-    color: var(--text);
+    background: var(--bg); color: var(--text);
     font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', ui-monospace, monospace;
-    font-size: 13px;
-    line-height: 1.6;
-    min-height: 100vh;
-    padding: 32px 24px 48px;
+    font-size: 13px; line-height: 1.6; min-height: 100vh; padding: 32px 24px 48px;
   }
 
   .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 16px; flex-wrap: wrap; }
@@ -55,153 +51,180 @@
   .page-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
 
   .scope-banner {
-    background: var(--amber-dim);
-    border: 1px solid var(--amber-border);
-    border-radius: var(--radius);
-    padding: 9px 14px;
-    font-size: 11px;
-    color: #fcd34d;
-    margin-bottom: 20px;
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    line-height: 1.6;
+    background: var(--amber-dim); border: 1px solid var(--amber-border);
+    border-radius: var(--radius); padding: 9px 14px; font-size: 11px;
+    color: #fcd34d; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.6;
   }
   .scope-banner strong { color: #fde68a; }
 
   .legend {
-    display: flex; gap: 20px; flex-wrap: wrap;
-    margin-bottom: 20px; padding: 10px 14px;
+    display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; padding: 10px 14px;
     background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius);
   }
   .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
   .legend-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; flex-shrink: 0; }
 
-  /* Zones */
-  .diagram-wrap {
-    display: flex; gap: 20px; margin-bottom: 20px; flex-wrap: wrap;
-  }
-  .zone {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 20px;
-    position: relative; flex: 1; min-width: 300px;
-  }
-  .zone-label {
-    position: absolute; top: -10px; left: 16px;
-    background: var(--bg2); padding: 0 8px;
-    font-size: 11px; font-weight: 600; color: var(--text-muted);
-    letter-spacing: 0.04em; text-transform: uppercase;
-  }
+  .hint { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 10px; letter-spacing: 0.03em; }
 
-  /* Nodes */
+  /* ── Node ── */
   .node {
     display: inline-flex; flex-direction: column; align-items: center;
-    cursor: pointer; position: relative; transition: transform 0.15s;
+    cursor: pointer; flex-shrink: 0; transition: transform 0.15s;
   }
   .node:hover { transform: translateY(-2px); }
-  .node:hover .node-box { border-color: var(--border-hi); }
-
-  .node-box {
+  .node:hover .nb { border-color: var(--border-hi); }
+  .nb {
     border-radius: var(--radius); border: 1px solid var(--border);
-    background: var(--bg3); padding: 8px 12px; text-align: center;
-    transition: border-color 0.2s, box-shadow 0.2s; min-width: 80px; position: relative;
+    background: var(--bg3); padding: 8px 14px; text-align: center;
+    transition: border-color 0.2s, box-shadow 0.2s; white-space: nowrap;
   }
-  .node-box.active { border-color: var(--blue-border); box-shadow: 0 0 0 3px var(--blue-dim); }
+  .nb.active { border-color: var(--blue-border); box-shadow: 0 0 0 3px var(--blue-dim); animation: pulse 0.4s ease-out; }
+  .nb.oval { border-radius: 999px; padding: 8px 18px; }
+  .nb.pill { border-radius: 24px; padding: 10px 20px; }
+  .nl { font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .ns { font-size: 10px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; }
 
-  .node-label { font-size: 11px; font-weight: 600; color: var(--text); white-space: nowrap; }
-  .node-sub { font-size: 9px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; }
+  .nb.c-blue   { background: var(--blue-dim);   border-color: var(--blue-border); }
+  .nb.c-teal   { background: var(--teal-dim);   border-color: var(--teal-border); }
+  .nb.c-amber  { background: var(--amber-dim);  border-color: var(--amber-border); }
+  .nb.c-purple { background: var(--purple-dim); border-color: var(--purple-border); }
+  .nb.c-green  { background: var(--green-dim);  border-color: var(--green-border); }
+  .nb.c-cyan   { background: var(--cyan-dim);   border-color: var(--cyan-border); }
 
-  .node-box.c-blue   { background: var(--blue-dim);   border-color: var(--blue-border);   }
-  .node-box.c-teal   { background: var(--teal-dim);   border-color: var(--teal-border);   }
-  .node-box.c-amber  { background: var(--amber-dim);  border-color: var(--amber-border);  }
-  .node-box.c-purple { background: var(--purple-dim); border-color: var(--purple-border); }
-  .node-box.c-green  { background: var(--green-dim);  border-color: var(--green-border);  }
-  .node-box.c-cyan   { background: var(--cyan-dim);   border-color: var(--cyan-border);   }
+  .nb.c-blue .nl   { color: #93c5fd; }
+  .nb.c-teal .nl   { color: #5eead4; }
+  .nb.c-amber .nl  { color: #fcd34d; }
+  .nb.c-purple .nl { color: #c4b5fd; }
+  .nb.c-green .nl  { color: var(--green); }
+  .nb.c-cyan .nl   { color: var(--cyan); }
 
-  .node-box.c-blue .node-label   { color: #93c5fd; }
-  .node-box.c-teal .node-label   { color: #5eead4; }
-  .node-box.c-amber .node-label  { color: #fcd34d; }
-  .node-box.c-purple .node-label { color: #c4b5fd; }
-  .node-box.c-green .node-label  { color: var(--green); }
-  .node-box.c-cyan .node-label   { color: var(--cyan); }
-
-  @keyframes node-pulse {
-    0%   { box-shadow: 0 0 0 0 var(--blue-dim); }
-    70%  { box-shadow: 0 0 0 8px transparent; }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 var(--blue-dim); }
+    70% { box-shadow: 0 0 0 8px transparent; }
     100% { box-shadow: 0 0 0 0 transparent; }
   }
-  .node-box.active { animation: node-pulse 0.4s ease-out; }
 
-  /* Pod groups */
-  .pod-group {
-    background: var(--bg3); border: 1px solid var(--border);
-    border-radius: var(--radius); padding: 12px; margin-bottom: 12px;
-    position: relative;
+  /* ── Horizontal arrow ── */
+  .ha { display: flex; align-items: center; min-width: 32px; flex: 0 0 auto; }
+  .ha-line {
+    height: 1px; background: var(--border-hi); flex: 1; min-width: 20px; position: relative;
   }
-  .pod-group-label {
-    font-size: 9px; color: var(--text-dim); text-transform: uppercase;
-    letter-spacing: 0.05em; margin-bottom: 8px;
-  }
-  .pod-group-nodes {
-    display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
-  }
-  .pod-arrow {
-    color: var(--text-dim); font-size: 10px; flex-shrink: 0;
+  .ha-head { width: 0; height: 0; border: 5px solid transparent; border-left-color: var(--border-hi); flex-shrink: 0; }
+  .ha-label {
+    position: absolute; top: -16px; left: 50%; transform: translateX(-50%);
+    font-size: 10px; color: var(--text-dim); white-space: nowrap; background: var(--bg2); padding: 0 4px;
   }
 
-  /* Guest node layout */
-  .guest-layout {
-    display: flex; flex-direction: column; gap: 16px; align-items: center;
+  /* ── Vertical arrow ── */
+  .va { display: flex; flex-direction: column; align-items: center; }
+  .va-line {
+    width: 1px; background: var(--border-hi); min-height: 24px; position: relative;
   }
-  .guest-row {
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: center;
-  }
-  .conn-line {
-    font-size: 10px; color: var(--text-dim); display: flex; align-items: center; gap: 4px;
-  }
-  .conn-line .line { width: 30px; height: 1px; background: var(--border-hi); }
-
-  /* Control plane layout */
-  .cp-section { margin-bottom: 16px; }
-  .cp-section-title {
-    font-size: 10px; color: var(--text-dim); text-transform: uppercase;
-    letter-spacing: 0.05em; margin-bottom: 10px; padding-bottom: 6px;
-    border-bottom: 1px solid var(--border);
-  }
-  .cp-pods-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 10px;
+  .va-head { width: 0; height: 0; border: 5px solid transparent; border-top-color: var(--border-hi); }
+  .va-head-up { width: 0; height: 0; border: 5px solid transparent; border-bottom-color: var(--border-hi); }
+  .va-label {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 10px; color: var(--text-dim); white-space: nowrap; background: var(--bg2); padding: 0 4px;
   }
 
-  /* Services */
-  .svc-row {
-    display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px;
+  /* ── Layout ── */
+  .topo {
+    background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 28px 24px 24px; margin-bottom: 20px; overflow-x: auto;
   }
-  .svc-box {
-    background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 10px 14px; flex: 1; min-width: 200px; cursor: pointer;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-  .svc-box:hover { border-color: var(--border-hi); }
-  .svc-box.active { border-color: var(--blue-border); box-shadow: 0 0 0 3px var(--blue-dim); }
-  .svc-title { font-size: 11px; font-weight: 600; color: var(--cyan); }
-  .svc-detail { font-size: 10px; color: var(--text-muted); margin-top: 2px; }
+  .topo-inner { min-width: 900px; }
 
-  /* Tunnel visual */
-  .tunnel-bar {
-    background: linear-gradient(90deg, var(--teal-dim), var(--cyan-dim), var(--teal-dim));
-    border: 1px dashed var(--teal-border);
-    border-radius: var(--radius); padding: 8px 16px;
-    text-align: center; font-size: 10px; color: var(--teal);
-    margin: 16px 0; letter-spacing: 0.04em;
+  .zone {
+    border: 1px solid var(--border); border-radius: var(--radius-lg);
+    padding: 24px 20px 20px; position: relative;
+  }
+  .zone-lbl {
+    position: absolute; top: -10px; left: 16px; background: var(--bg2);
+    padding: 0 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em;
   }
 
-  .hint { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 14px; letter-spacing: 0.03em; }
+  .pod-box {
+    border: 1px dashed var(--border-hi); border-radius: var(--radius);
+    padding: 14px 16px; position: relative; background: rgba(255,255,255,0.015);
+  }
+  .pod-lbl {
+    position: absolute; top: -9px; left: 12px; background: var(--bg2);
+    padding: 0 6px; font-size: 9px; color: var(--text-dim); letter-spacing: 0.04em;
+  }
 
-  /* Detail panel */
+  /* row helpers */
+  .row { display: flex; align-items: center; }
+  .row-c { display: flex; align-items: center; justify-content: center; }
+  .col { display: flex; flex-direction: column; align-items: center; }
+  .gap-8 { gap: 8px; }
+  .gap-12 { gap: 12px; }
+  .gap-16 { gap: 16px; }
+
+  /* ── Operator section ── */
+  .ops-section {
+    display: flex; align-items: stretch; gap: 0; margin-top: 20px;
+  }
+  .ops-hub {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    flex-shrink: 0; padding-right: 0;
+  }
+  .ops-bus {
+    display: flex; align-items: stretch; flex-shrink: 0; width: 48px;
+  }
+  .ops-bus-line {
+    width: 1px; background: var(--cyan-border); opacity: 0.5;
+    margin: 20px 0; align-self: stretch;
+  }
+  .ops-bus-taps {
+    display: flex; flex-direction: column; justify-content: space-around;
+    align-self: stretch; margin: 20px 0;
+  }
+  .ops-bus-tap {
+    display: flex; align-items: center; height: 0;
+  }
+  .ops-bus-tap-line {
+    width: 32px; height: 1px; background: var(--cyan-border); opacity: 0.5;
+  }
+  .ops-bus-tap-head {
+    width: 0; height: 0; border: 4px solid transparent;
+    border-left-color: var(--cyan-border); opacity: 0.6;
+  }
+
+  .ops-list {
+    display: flex; flex-direction: column; gap: 8px; flex: 1; min-width: 0;
+  }
+  .op-row {
+    display: flex; align-items: center; gap: 0;
+    border: 1px dashed var(--border-hi); border-radius: var(--radius);
+    background: rgba(255,255,255,0.015); padding: 8px 12px;
+    position: relative; cursor: pointer; transition: border-color 0.2s;
+  }
+  .op-row:hover { border-color: rgba(255,255,255,0.25); }
+  .op-row.active { border-color: var(--blue-border); }
+  .op-lbl {
+    font-size: 9px; color: var(--text-dim); position: absolute; top: -8px; left: 12px;
+    background: var(--bg2); padding: 0 4px;
+  }
+  .op-n {
+    padding: 4px 10px; border-radius: 6px; border: 1px solid;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .op-n-l { font-size: 11px; font-weight: 600; }
+  .op-n.c-amber  { background: var(--amber-dim); border-color: var(--amber-border); }
+  .op-n.c-purple { background: var(--purple-dim); border-color: var(--purple-border); }
+  .op-n.c-amber .op-n-l  { color: #fcd34d; }
+  .op-n.c-purple .op-n-l { color: #c4b5fd; }
+  .op-ha {
+    display: flex; align-items: center; width: 28px; margin: 0 4px; flex-shrink: 0;
+  }
+  .op-ha::before { content: ''; flex: 1; height: 1px; background: var(--border-hi); }
+  .op-ha::after { content: ''; border: 4px solid transparent; border-left-color: var(--border-hi); }
+  .op-sc-grp { display: flex; gap: 6px; flex-wrap: wrap; }
+
+  /* ── Detail panel ── */
   .detail-panel {
     background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 20px 24px;
-    margin-bottom: 20px; min-height: 130px;
+    border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 20px; min-height: 130px;
   }
   .detail-panel h3 {
     font-size: 13px; font-weight: 600; color: var(--text);
@@ -216,7 +239,6 @@
   .detail-card-body .warn { color: var(--red); }
   .detail-card-body .ok { color: var(--green); }
 
-  /* Reference cards */
   .ref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
   .ref-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
   .ref-card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 10px; }
@@ -225,32 +247,6 @@
   .ref-item-label { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
   .ref-item-val { color: var(--text); font-size: 11px; text-align: right; }
   .ref-item-val code { color: var(--amber); font-size: 10px; }
-
-  /* Flow cards */
-  .flow-cards {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 14px; margin-bottom: 20px;
-  }
-  .flow-card {
-    background: var(--bg2); border: 1px solid var(--border);
-    border-radius: var(--radius-lg); padding: 16px 18px;
-  }
-  .flow-card-title {
-    font-size: 12px; font-weight: 600; color: var(--text); margin-bottom: 10px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .flow-card-title .fc-num {
-    width: 20px; height: 20px; border-radius: 50%;
-    background: var(--blue-dim); border: 1px solid var(--blue-border);
-    color: #93c5fd; font-size: 10px; font-weight: 700;
-    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-  }
-  .flow-step {
-    display: flex; gap: 8px; padding: 4px 0; font-size: 11px; color: var(--text-muted);
-  }
-  .flow-step-num {
-    color: var(--text-dim); font-size: 10px; flex-shrink: 0; min-width: 16px; text-align: right;
-  }
 
   .kcs-bar {
     background: var(--blue-dim); border: 1px solid var(--blue-border);
@@ -280,8 +276,8 @@
 
 <div class="legend">
   <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-dim);border-color:var(--blue-border)"></div> Kubernetes API / Core</div>
-  <div class="legend-item"><div class="legend-swatch" style="background:var(--teal-dim);border-color:var(--teal-border)"></div> Konnectivity tunnel</div>
-  <div class="legend-item"><div class="legend-swatch" style="background:var(--cyan-dim);border-color:var(--cyan-border)"></div> Services / Endpoints</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--teal-dim);border-color:var(--teal-border)"></div> Konnectivity (server/agent)</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--cyan-dim);border-color:var(--cyan-border)"></div> Services</div>
   <div class="legend-item"><div class="legend-swatch" style="background:var(--purple-dim);border-color:var(--purple-border)"></div> Proxy sidecars</div>
   <div class="legend-item"><div class="legend-swatch" style="background:var(--amber-dim);border-color:var(--amber-border)"></div> Control plane operators</div>
   <div class="legend-item"><div class="legend-swatch" style="background:var(--green-dim);border-color:var(--green-border)"></div> Guest / Data plane</div>
@@ -289,247 +285,192 @@
 
 <p class="hint">Click any component to see details</p>
 
-<div class="diagram-wrap">
+<!-- ════════════════ TOPOLOGY ════════════════ -->
+<div class="topo">
+<div class="topo-inner">
 
-  <!-- Guest Node Zone -->
-  <div class="zone" style="flex:0.8;">
-    <div class="zone-label">Guest Node (Data Plane)</div>
-    <div class="guest-layout">
-      <div class="pod-group">
-        <div class="pod-group-label">Worker Node</div>
-        <div class="guest-row">
-          <div class="node" onclick="selectNode('kubelet')">
-            <div class="node-box c-green" id="box-kubelet">
-              <div class="node-label">kubelet</div>
-              <div class="node-sub">port 10250</div>
-            </div>
-          </div>
-          <div class="conn-line"><div class="line"></div>&larr;<div class="line"></div></div>
-          <div class="node" onclick="selectNode('agent-data')">
-            <div class="node-box c-teal" id="box-agent-data">
-              <div class="node-label">konnectivity-agent</div>
-              <div class="node-sub">DaemonSet &middot; kube-system</div>
-            </div>
-          </div>
+  <!-- ═══ GUEST NODE ZONE ═══ -->
+  <div class="zone" style="border-color:var(--green-border); margin-bottom:0;">
+    <div class="zone-lbl" style="color:var(--green);">Guest Node (Data Plane)</div>
+    <div class="row-c gap-8">
+      <div class="node" onclick="selectNode('agent-data')">
+        <div class="nb c-teal oval" id="box-agent-data"><div class="nl">konnectivity-agent</div><div class="ns">DaemonSet &middot; kube-system</div></div>
+      </div>
+      <div class="ha" style="width:60px;">
+        <div class="ha-line"><span class="ha-label">port 10250</span></div>
+        <div class="ha-head"></div>
+      </div>
+      <div class="col gap-8">
+        <div class="node" onclick="selectNode('kubelet')">
+          <div class="nb c-green" id="box-kubelet"><div class="nl">kubelet</div><div class="ns">logs / exec / port-forward</div></div>
         </div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-        <div style="width:1px;height:20px;background:var(--border-hi);"></div>
-        <div style="font-size:9px;color:var(--text-dim);">outbound tunnel</div>
-        <div style="width:1px;height:20px;background:var(--border-hi);"></div>
-      </div>
-
-      <div class="node" onclick="selectNode('guest-network')">
-        <div class="node-box c-green" id="box-guest-network">
-          <div class="node-label">Guest Service Network</div>
-          <div class="node-sub">pod &amp; service CIDRs</div>
-        </div>
-      </div>
-
-      <div style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-        <div style="width:1px;height:16px;background:var(--border-hi);"></div>
-        <div style="font-size:9px;color:var(--text-dim);">via</div>
-        <div style="width:1px;height:16px;background:var(--border-hi);"></div>
-      </div>
-
-      <div class="node" onclick="selectNode('machine-network')">
-        <div class="node-box c-green" style="border-radius:24px 24px 8px 8px;" id="box-machine-network">
-          <div class="node-label">Guest Machine Network / Proxy</div>
-          <div class="node-sub">egress to management cluster</div>
+        <div class="node" onclick="selectNode('guest-network')">
+          <div class="nb c-green" id="box-guest-network"><div class="nl">Guest Service Network</div><div class="ns">pod &amp; service CIDRs</div></div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Hosted Control Plane Zone -->
-  <div class="zone" style="flex:1.6;">
-    <div class="zone-label">Hosted Control Plane (Management Cluster)</div>
+  <!-- ═══ VERTICAL: Guest → Machine Network → Control Plane ═══ -->
+  <div class="col" style="margin: 0 auto;">
+    <div class="va"><div class="va-line" style="min-height:16px;"><span class="va-label">registration</span></div><div class="va-head"></div></div>
+    <div class="node" onclick="selectNode('machine-network')">
+      <div class="nb c-green pill" id="box-machine-network"><div class="nl">Guest Machine Network / Proxy</div><div class="ns">proxy / PrivateLink / VPN</div></div>
+    </div>
+    <div class="va"><div class="va-line" style="min-height:16px;"><span class="va-label">tunnel via port 8091</span></div><div class="va-head"></div></div>
+  </div>
 
-    <!-- Core: kube-apiserver pod -->
-    <div class="cp-section">
-      <div class="cp-section-title">Core &mdash; kube-apiserver pod</div>
-      <div class="pod-group">
-        <div class="pod-group-label">kube-apiserver pod</div>
-        <div class="pod-group-nodes">
-          <div class="node" onclick="selectNode('kas')">
-            <div class="node-box c-blue" id="box-kas">
-              <div class="node-label">kube-apiserver</div>
-              <div class="node-sub">port 6443</div>
+  <!-- ═══ HOSTED CONTROL PLANE ZONE ═══ -->
+  <div class="zone" style="border-color:var(--blue-border);">
+    <div class="zone-lbl" style="color:#93c5fd;">Hosted Control Plane (Management Cluster)</div>
+
+    <!-- Row: kube-apiserver pod + connector + operators — centered -->
+    <div class="row gap-16" style="flex-wrap:nowrap; align-items:flex-start; justify-content:center;">
+
+      <!-- Left: kube-apiserver pod column -->
+      <div class="col gap-12" style="flex-shrink:0;">
+        <div class="pod-box">
+          <div class="pod-lbl">kube-apiserver pod</div>
+          <div class="row">
+            <div class="node" onclick="selectNode('kas')">
+              <div class="nb c-blue" id="box-kas"><div class="nl">kube-apiserver</div><div class="ns">port 6443</div></div>
+            </div>
+            <div class="ha" style="width:56px;">
+              <div class="ha-head" style="transform:rotate(180deg);"></div>
+              <div class="ha-line"><span class="ha-label">sidecar</span></div>
+              <div class="ha-head"></div>
+            </div>
+            <div class="node" onclick="selectNode('konnectivity-server')">
+              <div class="nb c-teal oval" id="box-konnectivity-server"><div class="nl">konnectivity-server</div><div class="ns">http-connect mode</div></div>
             </div>
           </div>
-          <div class="pod-arrow">&harr;</div>
-          <div class="node" onclick="selectNode('konnectivity-server')">
-            <div class="node-box c-teal" id="box-konnectivity-server">
-              <div class="node-label">konnectivity-server</div>
-              <div class="node-sub">sidecar &middot; http-connect</div>
+        </div>
+
+        <!-- Two vertical arrows down -->
+        <div class="row-c gap-16">
+          <div class="va"><div class="va-line" style="min-height:24px;"><span class="va-label" style="left:-60px;right:auto;">Default Route</span></div><div class="va-head"></div></div>
+          <div class="va"><div class="va-line" style="min-height:24px;"><span class="va-label">HCP APIServices</span></div><div class="va-head"></div></div>
+        </div>
+
+        <!-- CP agent -->
+        <div class="node" onclick="selectNode('agent-cp')">
+          <div class="nb c-teal" id="box-agent-cp" style="border-style:dashed;"><div class="nl">konnectivity-agent (CP)</div><div class="ns">Deployment &middot; --agent-identifiers</div></div>
+        </div>
+
+        <!-- Arrow down to svc-cluster -->
+        <div class="va"><div class="va-line" style="min-height:16px;"><span class="va-label">registration</span></div><div class="va-head"></div></div>
+
+        <!-- konnectivity-server-service -->
+        <div class="node" onclick="selectNode('svc-cluster')">
+          <div class="nb c-cyan" id="box-svc-cluster"><div class="nl">konnectivity-server-service</div><div class="ns">port 8091 &middot; external &middot; Route / NodePort / LB</div></div>
+        </div>
+      </div>
+
+      <!-- Middle: horizontal connector -->
+      <div style="display:flex; align-items:flex-start; flex-shrink:0; padding-top:24px;">
+        <div class="ha" style="width:48px;">
+          <div class="ha-line"><span class="ha-label">port 8090</span></div>
+          <div class="ha-head"></div>
+        </div>
+      </div>
+
+      <!-- Right: svc-local hub + operator stack -->
+      <div style="flex:0 1 auto; min-width:0; display:flex; align-items:stretch; gap:0;">
+        <div class="ops-section" style="margin-top:0;">
+        <!-- svc-local -->
+        <div class="ops-hub">
+          <div class="node" onclick="selectNode('svc-local')">
+            <div class="nb c-cyan" id="box-svc-local" style="padding:12px 14px;">
+              <div class="nl">konnectivity-server-</div>
+              <div class="nl">local-service</div>
+              <div class="ns">port 8090 &middot; internal</div>
+              <div class="ns">NetworkPolicy protected</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Vertical bus with taps -->
+        <div class="ops-bus">
+          <div class="ops-bus-line"></div>
+          <div class="ops-bus-taps">
+            <div class="ops-bus-tap"><div class="ops-bus-tap-line"></div><div class="ops-bus-tap-head"></div></div>
+            <div class="ops-bus-tap"><div class="ops-bus-tap-line"></div><div class="ops-bus-tap-head"></div></div>
+            <div class="ops-bus-tap"><div class="ops-bus-tap-line"></div><div class="ops-bus-tap-head"></div></div>
+            <div class="ops-bus-tap"><div class="ops-bus-tap-line"></div><div class="ops-bus-tap-head"></div></div>
+            <div class="ops-bus-tap"><div class="ops-bus-tap-line"></div><div class="ops-bus-tap-head"></div></div>
+            <div class="ops-bus-tap"><div class="ops-bus-tap-line"></div><div class="ops-bus-tap-head"></div></div>
+            <div class="ops-bus-tap"><div class="ops-bus-tap-line"></div><div class="ops-bus-tap-head"></div></div>
+            <div class="ops-bus-tap"><div class="ops-bus-tap-line"></div><div class="ops-bus-tap-head"></div></div>
+          </div>
+        </div>
+
+        <!-- Operator rows -->
+        <div class="ops-list">
+            <div class="op-row" onclick="selectNode('openshift-apiserver')">
+              <div class="op-lbl">openshift-apiserver pod</div>
+              <div class="op-n c-amber"><div class="op-n-l">openshift-apiserver</div></div>
+              <div class="op-ha"></div>
+              <div class="op-n c-purple"><div class="op-n-l">konnectivity-https-proxy</div></div>
+            </div>
+            <div class="op-row" onclick="selectNode('oauth-apiserver')">
+              <div class="op-lbl">oauth-apiserver pod</div>
+              <div class="op-n c-amber"><div class="op-n-l">oauth-apiserver</div></div>
+              <div class="op-ha"></div>
+              <div class="op-sc-grp">
+                <div class="op-n c-purple"><div class="op-n-l">konnectivity-socks5-proxy</div></div>
+                <div class="op-n c-purple"><div class="op-n-l">konnectivity-https-proxy</div></div>
+              </div>
+            </div>
+            <div class="op-row" onclick="selectNode('cno')">
+              <div class="op-lbl">cluster-network-operator pod</div>
+              <div class="op-n c-amber"><div class="op-n-l">cluster-network-operator</div></div>
+              <div class="op-ha"></div>
+              <div class="op-n c-purple"><div class="op-n-l">konnectivity-socks5-proxy</div></div>
+            </div>
+            <div class="op-row" onclick="selectNode('ovnkube')">
+              <div class="op-lbl">ovnkube-control-plane pod</div>
+              <div class="op-n c-amber"><div class="op-n-l">ovnkube-control-plane</div></div>
+              <div class="op-ha"></div>
+              <div class="op-n c-purple"><div class="op-n-l">konnectivity-socks5-proxy</div></div>
+            </div>
+            <div class="op-row" onclick="selectNode('ingress-operator')">
+              <div class="op-lbl">ingress-operator pod</div>
+              <div class="op-n c-amber"><div class="op-n-l">ingress-operator</div></div>
+              <div class="op-ha"></div>
+              <div class="op-n c-purple"><div class="op-n-l">konnectivity-https-proxy</div></div>
+            </div>
+            <div class="op-row" onclick="selectNode('packageserver')">
+              <div class="op-lbl">packageserver pod</div>
+              <div class="op-n c-amber"><div class="op-n-l">package-server</div></div>
+              <div class="op-ha"></div>
+              <div class="op-n c-purple"><div class="op-n-l">konnectivity-socks5-proxy</div></div>
+            </div>
+            <div class="op-row" onclick="selectNode('olm-operator')">
+              <div class="op-lbl">olm-operator pod</div>
+              <div class="op-n c-amber"><div class="op-n-l">olm-operator</div></div>
+              <div class="op-ha"></div>
+              <div class="op-n c-purple"><div class="op-n-l">konnectivity-socks5-proxy</div></div>
+            </div>
+            <div class="op-row" onclick="selectNode('catalog-operator')">
+              <div class="op-lbl">catalog-operator pod</div>
+              <div class="op-n c-amber"><div class="op-n-l">catalog-operator</div></div>
+              <div class="op-ha"></div>
+              <div class="op-n c-purple"><div class="op-n-l">konnectivity-socks5-proxy</div></div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Services -->
-    <div class="cp-section">
-      <div class="cp-section-title">Services</div>
-      <div class="svc-row">
-        <div class="svc-box" id="box-svc-local" onclick="selectNode('svc-local')">
-          <div class="svc-title">konnectivity-server-local</div>
-          <div class="svc-detail">Port 8090 &middot; internal only &middot; network-policy protected</div>
-          <div class="svc-detail" style="color:var(--text-dim);">Used by: API server, SOCKS5/HTTPS proxy sidecars</div>
-        </div>
-        <div class="svc-box" id="box-svc-cluster" onclick="selectNode('svc-cluster')">
-          <div class="svc-title">konnectivity-server (cluster)</div>
-          <div class="svc-detail">Port 8091 &middot; externally exposed via Route/NodePort/LB</div>
-          <div class="svc-detail" style="color:var(--text-dim);">Used by: worker node agents for tunnel registration</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Control plane konnectivity-agent -->
-    <div class="cp-section">
-      <div class="cp-section-title">Control Plane Agent</div>
-      <div class="pod-group">
-        <div class="pod-group-label">konnectivity-agent (control plane)</div>
-        <div class="pod-group-nodes">
-          <div class="node" onclick="selectNode('agent-cp')">
-            <div class="node-box c-teal" id="box-agent-cp">
-              <div class="node-label">konnectivity-agent</div>
-              <div class="node-sub">Deployment &middot; aggregated API routing</div>
-            </div>
-          </div>
-          <div class="pod-arrow" style="font-size:9px;color:var(--text-dim);">--agent-identifiers filtering</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Operator pods with sidecars -->
-    <div class="cp-section">
-      <div class="cp-section-title">Operator Pods with Proxy Sidecars</div>
-      <div class="cp-pods-grid">
-
-        <div class="pod-group" onclick="selectNode('openshift-apiserver')" style="cursor:pointer;">
-          <div class="pod-group-label">openshift-apiserver pod</div>
-          <div class="pod-group-nodes">
-            <div class="node"><div class="node-box c-amber" id="box-openshift-apiserver"><div class="node-label">openshift-apiserver</div></div></div>
-            <div class="pod-arrow">&rarr;</div>
-            <div class="node"><div class="node-box c-purple"><div class="node-label">https-proxy</div></div></div>
-          </div>
-        </div>
-
-        <div class="pod-group" onclick="selectNode('oauth-apiserver')" style="cursor:pointer;">
-          <div class="pod-group-label">oauth-apiserver pod</div>
-          <div class="pod-group-nodes">
-            <div class="node"><div class="node-box c-amber" id="box-oauth-apiserver"><div class="node-label">oauth-apiserver</div></div></div>
-            <div class="pod-arrow">&rarr;</div>
-            <div class="node"><div class="node-box c-purple"><div class="node-label">socks5</div></div></div>
-            <div class="node"><div class="node-box c-purple"><div class="node-label">https</div></div></div>
-          </div>
-        </div>
-
-        <div class="pod-group" onclick="selectNode('cno')" style="cursor:pointer;">
-          <div class="pod-group-label">cluster-network-operator pod</div>
-          <div class="pod-group-nodes">
-            <div class="node"><div class="node-box c-amber" id="box-cno"><div class="node-label">cluster-network-operator</div></div></div>
-            <div class="pod-arrow">&rarr;</div>
-            <div class="node"><div class="node-box c-purple"><div class="node-label">socks5-proxy</div></div></div>
-          </div>
-        </div>
-
-        <div class="pod-group" onclick="selectNode('ovnkube')" style="cursor:pointer;">
-          <div class="pod-group-label">ovnkube-control-plane pod</div>
-          <div class="pod-group-nodes">
-            <div class="node"><div class="node-box c-amber" id="box-ovnkube"><div class="node-label">ovnkube-control-plane</div></div></div>
-            <div class="pod-arrow">&rarr;</div>
-            <div class="node"><div class="node-box c-purple"><div class="node-label">socks5-proxy</div></div></div>
-          </div>
-        </div>
-
-        <div class="pod-group" onclick="selectNode('ingress-operator')" style="cursor:pointer;">
-          <div class="pod-group-label">ingress-operator pod</div>
-          <div class="pod-group-nodes">
-            <div class="node"><div class="node-box c-amber" id="box-ingress-operator"><div class="node-label">ingress-operator</div></div></div>
-            <div class="pod-arrow">&rarr;</div>
-            <div class="node"><div class="node-box c-purple"><div class="node-label">https-proxy</div></div></div>
-          </div>
-        </div>
-
-        <div class="pod-group" onclick="selectNode('packageserver')" style="cursor:pointer;">
-          <div class="pod-group-label">packageserver pod</div>
-          <div class="pod-group-nodes">
-            <div class="node"><div class="node-box c-amber" id="box-packageserver"><div class="node-label">package-server</div></div></div>
-            <div class="pod-arrow">&rarr;</div>
-            <div class="node"><div class="node-box c-purple"><div class="node-label">socks5-proxy</div></div></div>
-          </div>
-        </div>
-
-        <div class="pod-group" onclick="selectNode('olm-operator')" style="cursor:pointer;">
-          <div class="pod-group-label">olm-operator pod</div>
-          <div class="pod-group-nodes">
-            <div class="node"><div class="node-box c-amber" id="box-olm-operator"><div class="node-label">olm-operator</div></div></div>
-            <div class="pod-arrow">&rarr;</div>
-            <div class="node"><div class="node-box c-purple"><div class="node-label">socks5-proxy</div></div></div>
-          </div>
-        </div>
-
-        <div class="pod-group" onclick="selectNode('catalog-operator')" style="cursor:pointer;">
-          <div class="pod-group-label">catalog-operator pod</div>
-          <div class="pod-group-nodes">
-            <div class="node"><div class="node-box c-amber" id="box-catalog-operator"><div class="node-label">catalog-operator</div></div></div>
-            <div class="pod-arrow">&rarr;</div>
-            <div class="node"><div class="node-box c-purple"><div class="node-label">socks5-proxy</div></div></div>
-          </div>
-        </div>
-
-      </div>
     </div>
   </div>
+
 </div>
-
-<!-- Tunnel visualization -->
-<div class="tunnel-bar">
-  &#x1f510; mTLS Tunnel &mdash; konnectivity-agent (worker) &xrarr; port 8091 &xrarr; konnectivity-server &mdash; all traffic flows through this reverse tunnel
 </div>
 
 <!-- Detail panel -->
 <div class="detail-panel" id="detail-panel">
-  <div id="detail-hint" style="font-size:12px;color:var(--text-muted);">
-    &larr; Select a component above to see notes, architecture details, and relevant config.
-  </div>
+  <div id="detail-hint" style="font-size:12px;color:var(--text-muted);">&larr; Select a component above to see notes, architecture details, and relevant config.</div>
   <div class="detail-content" id="detail-content" style="display:none;"></div>
-</div>
-
-<!-- Traffic flow cards -->
-<div style="font-size:12px;font-weight:600;color:var(--text);margin-bottom:12px;">Traffic Flows</div>
-<div class="flow-cards">
-  <div class="flow-card">
-    <div class="flow-card-title"><div class="fc-num">1</div>API Server &rarr; Kubelet</div>
-    <div class="flow-step"><span class="flow-step-num">1.</span> API server initiates request (e.g. <code style="color:var(--amber);font-size:10px;">kubectl logs</code>)</div>
-    <div class="flow-step"><span class="flow-step-num">2.</span> Egress selector routes cluster traffic to konnectivity-server-local :8090</div>
-    <div class="flow-step"><span class="flow-step-num">3.</span> Server selects tunnel to target worker node agent</div>
-    <div class="flow-step"><span class="flow-step-num">4.</span> Agent forwards to local kubelet on port 10250</div>
-  </div>
-  <div class="flow-card">
-    <div class="flow-card-title"><div class="fc-num">2</div>Aggregated API (e.g. OpenShift API)</div>
-    <div class="flow-step"><span class="flow-step-num">1.</span> Service (no selector) + Endpoints created in hosted cluster</div>
-    <div class="flow-step"><span class="flow-step-num">2.</span> API server routes APIService request through tunnel</div>
-    <div class="flow-step"><span class="flow-step-num">3.</span> Control plane konnectivity-agent intercepts (--agent-identifiers)</div>
-    <div class="flow-step"><span class="flow-step-num">4.</span> Routes back to actual aggregated API server in CP namespace</div>
-  </div>
-  <div class="flow-card">
-    <div class="flow-card-title"><div class="fc-num">3</div>Proxy Sidecar Traffic</div>
-    <div class="flow-step"><span class="flow-step-num">1.</span> Operator initiates connection (e.g. catalog-operator)</div>
-    <div class="flow-step"><span class="flow-step-num">2.</span> Traffic goes to local socks5-proxy or https-proxy sidecar</div>
-    <div class="flow-step"><span class="flow-step-num">3.</span> Sidecar connects to konnectivity-server-local :8090</div>
-    <div class="flow-step"><span class="flow-step-num">4.</span> Server routes through agent tunnel to data plane</div>
-  </div>
-  <div class="flow-card">
-    <div class="flow-card-title"><div class="fc-num">4</div>Agent Registration (reverse)</div>
-    <div class="flow-step"><span class="flow-step-num">1.</span> Worker konnectivity-agent dials konnectivity-server :8091 (outbound)</div>
-    <div class="flow-step"><span class="flow-step-num">2.</span> Server responds with unique ID + total server count</div>
-    <div class="flow-step"><span class="flow-step-num">3.</span> Agent keeps dialing until connected to all servers (HA)</div>
-    <div class="flow-step"><span class="flow-step-num">4.</span> Persistent tunnel maintained for control plane push traffic</div>
-  </div>
 </div>
 
 <!-- Reference cards -->
@@ -542,7 +483,6 @@
     <div class="ref-item"><span class="ref-item-label">API Server</span><span class="ref-item-val"><code>6443</code> HTTPS</span></div>
     <div class="ref-item"><span class="ref-item-label">Mode</span><span class="ref-item-val">HTTP-Connect (not gRPC)</span></div>
   </div>
-
   <div class="ref-card">
     <div class="ref-card-title">Publishing Strategy by Platform</div>
     <div class="ref-item"><span class="ref-item-label">AWS Public</span><span class="ref-item-val">Route via HCP router :443</span></div>
@@ -551,7 +491,6 @@
     <div class="ref-item"><span class="ref-item-label">Agent / Bare Metal</span><span class="ref-item-val">NodePort :8091</span></div>
     <div class="ref-item"><span class="ref-item-label">KubeVirt</span><span class="ref-item-val">Route (default) or NodePort</span></div>
   </div>
-
   <div class="ref-card">
     <div class="ref-card-title">Certificates (mTLS)</div>
     <div class="ref-item"><span class="ref-item-label">CA</span><span class="ref-item-val"><code>konnectivity-signer</code></span></div>
@@ -560,7 +499,6 @@
     <div class="ref-item"><span class="ref-item-label">Client cert</span><span class="ref-item-val"><code>konnectivity-client</code></span></div>
     <div class="ref-item"><span class="ref-item-label">Agent cert</span><span class="ref-item-val"><code>konnectivity-agent</code></span></div>
   </div>
-
   <div class="ref-card">
     <div class="ref-card-title">Quick Diagnostics</div>
     <div class="ref-item"><span class="ref-item-label">Functional test</span><span class="ref-item-val"><code>kubectl logs &lt;pod&gt;</code> in hosted cluster</span></div>
@@ -576,193 +514,135 @@
 </div>
 
 <script>
-const nodeData = {
-  kas: {
-    color: '#3b82f6', title: 'kube-apiserver',
-    cards: [
-      { title: 'Role', body: `The Kubernetes API server for the hosted cluster. Runs as a pod in the control plane namespace of the management cluster. Listens on port <code>6443</code>.` },
-      { title: 'Egress Selector', body: `Configured via <code>kas-egress-selector-config</code> ConfigMap. Routes all <strong>cluster connections</strong> (to kubelets, services) through konnectivity-server. Master and etcd connections are NOT routed through konnectivity.` },
-      { title: 'Konnectivity integration', body: `konnectivity-server runs as a <strong>sidecar container</strong> in the same pod. Communication happens over loopback for minimal latency. The API server uses the <code>konnectivity-client</code> certificate to authenticate.` },
-      { title: 'HA', body: `Typically 3 replicas. Each pod contains its own konnectivity-server sidecar, each generating a unique server ID at startup. Worker agents connect to all servers for full redundancy.` },
-    ]
-  },
-  'konnectivity-server': {
-    color: '#14b8a6', title: 'konnectivity-server',
-    cards: [
-      { title: 'Role', body: `Accepts proxy requests from the API server and proxy sidecars, then routes them through pre-established agent tunnels to reach the data plane. Runs as a sidecar in the kube-apiserver pod.` },
-      { title: 'Protocol', body: `Uses <strong>HTTP-Connect mode</strong> (not gRPC) to support multiple client types — SOCKS5 proxies, HTTPS proxies, and the API server itself. Listens on a <strong>TCP port</strong> (not UDS) so it can be exposed as a Kubernetes Service.` },
-      { title: 'Two services', body: `Exposed via two services:<br>• <code>konnectivity-server-local</code> :8090 — internal, for CP components<br>• <code>konnectivity-server</code> :8091 — external, for agent registration<br>Port 8090 is protected by NetworkPolicy.` },
-      { title: 'Important', body: `<span class="warn">Only accepts IP addresses, not DNS names, for proxy destinations.</span> This is relevant when debugging with curl — you must use node IPs, not hostnames.` },
-    ]
-  },
-  'svc-local': {
-    color: '#22d3ee', title: 'konnectivity-server-local (Service)',
-    cards: [
-      { title: 'Purpose', body: `Internal service for control plane components to connect to konnectivity-server. Port <code>8090</code>. Protected by NetworkPolicy — only pods in the control plane namespace can reach it.` },
-      { title: 'Clients', body: `Used by the kube-apiserver (via egress selector), SOCKS5 proxy sidecars, and HTTPS proxy sidecars. All authenticate with the <code>konnectivity-client</code> certificate.` },
-      { title: 'Why TCP not UDS', body: `A TCP port is required so it can be exposed as a Kubernetes Service, allowing proxy sidecar containers in other pods to reach it. A Unix Domain Socket would only work within the same pod.` },
-      { title: 'Debug', body: `You can port-forward this service for manual testing:<br><code>oc port-forward svc/konnectivity-server-local 8090:8090</code><br>Then use curl with proxy flags and mTLS certs.` },
-    ]
-  },
-  'svc-cluster': {
-    color: '#22d3ee', title: 'konnectivity-server cluster (Service)',
-    cards: [
-      { title: 'Purpose', body: `Externally exposed service for worker node konnectivity-agents to establish reverse tunnels. Port <code>8091</code>. Exposed via Route, NodePort, or LoadBalancer depending on platform.` },
-      { title: 'Publishing strategies', body: `• <strong>Route</strong> (AWS/Azure/GCP): via HCP router on :443<br>• <strong>NodePort</strong> (Agent/Bare Metal): direct on :8091<br>• <strong>LoadBalancer</strong>: dedicated cloud LB on :8091` },
-      { title: 'Private clusters', body: `On AWS Private: exposed via Route + PrivateLink. On Azure/ARO HCP: SNI-based routing through shared HAProxy in <code>hypershift-sharedingress</code> namespace. Uses <code>hypershift.local</code> hostname.` },
-      { title: 'Worker egress requirements', body: `Workers must have egress to this service. Required ports:<br>• :443 (Route strategy)<br>• :8091 (NodePort/LB strategy)<br><span class="warn">Firewall blocking these ports = tunnel failure.</span>` },
-    ]
-  },
-  'agent-data': {
-    color: '#14b8a6', title: 'konnectivity-agent (Data Plane)',
-    cards: [
-      { title: 'Role', body: `Runs as a <strong>DaemonSet</strong> in <code>kube-system</code> on every worker node. Establishes and maintains reverse tunnels to konnectivity-server, then forwards incoming traffic to local kubelets and services.` },
-      { title: 'Registration', body: `Initiates <strong>outbound</strong> connections to konnectivity-server on port 8091. Server responds with its unique ID and total server count. Agent keeps dialing until connected to all unique servers for full HA.` },
-      { title: 'Certificates', body: `Authenticates with <code>konnectivity-agent</code> client certificate, signed by the <code>konnectivity-signer</code> CA. CA bundle distributed via <code>konnectivity-ca-bundle</code> ConfigMap in <code>kube-system</code>.` },
-      { title: 'Traffic forwarding', body: `Once tunnel is established, the agent forwards requests from the control plane to local targets — typically kubelet on port 10250. This enables <code>kubectl logs</code>, <code>exec</code>, <code>port-forward</code>, and webhook calls.` },
-    ]
-  },
-  'agent-cp': {
-    color: '#14b8a6', title: 'konnectivity-agent (Control Plane)',
-    cards: [
-      { title: 'Role', body: `A separate <strong>Deployment</strong> running in the control plane namespace. Handles traffic specifically for <strong>aggregated API services</strong> — openshift-apiserver, oauth-apiserver, packageserver.` },
-      { title: '--agent-identifiers', body: `Uses the <code>--agent-identifiers</code> flag to filter traffic, accepting <strong>only</strong> traffic destined for control plane aggregated API services. <span class="warn">Without this filter, general cluster traffic could be incorrectly routed to this agent.</span>` },
-      { title: 'How it works', body: `A headless Service (no selector) + Endpoints are created in the hosted cluster's default namespace, pointing to the control plane service IP. API server routes APIService requests through the tunnel, and this agent intercepts and routes back to the actual server in the CP namespace.` },
-      { title: 'Why separate', body: `The control plane agent exists because aggregated API servers run in the control plane, not on worker nodes. Traffic needs to "hairpin" — go through the tunnel and come back — so the API server's egress selector routing works correctly.` },
-    ]
-  },
-  kubelet: {
-    color: '#4ade80', title: 'kubelet',
-    cards: [
-      { title: 'Role', body: `The node agent on each worker node. Listens on port <code>10250</code>. Handles pod lifecycle, container logs, exec sessions, and metrics endpoints.` },
-      { title: 'Reached via tunnel', body: `In HyperShift, the API server cannot reach kubelets directly (different network). All kubelet traffic goes through the konnectivity tunnel: API server &rarr; konnectivity-server :8090 &rarr; tunnel &rarr; agent &rarr; kubelet :10250.` },
-      { title: 'Functional test', body: `<span class="ok">Quick smoke test:</span> run <code>kubectl logs &lt;pod&gt;</code> for a pod in the hosted cluster. If it works, the konnectivity tunnel is functional end-to-end.` },
-      { title: 'When it fails', body: `<span class="warn">If the tunnel is broken:</span> <code>kubectl logs</code>, <code>kubectl exec</code>, <code>kubectl port-forward</code> all fail. Webhooks also fail since they need to reach services on worker nodes.` },
-    ]
-  },
-  'guest-network': {
-    color: '#4ade80', title: 'Guest Service Network',
-    cards: [
-      { title: 'What it is', body: `The pod and service CIDR ranges of the hosted cluster. Services, endpoints, and pod IPs all live in this network space on the worker nodes.` },
-      { title: 'Reachable via', body: `Control plane components reach guest service network endpoints through the konnectivity tunnel. The proxy sidecars (SOCKS5 and HTTPS) facilitate this for operator pods.` },
-      { title: 'SOCKS5 vs HTTPS proxy', body: `• <strong>SOCKS5</strong>: for non-HTTP traffic (gRPC, LDAP) targeting data plane endpoints<br>• <strong>HTTPS</strong>: for traffic that must honor customer-supplied HTTP/S proxy configuration` },
-      { title: 'Network isolation', body: `Guest and management cluster networks are intentionally separate. This isolation is a security feature of HyperShift — the konnectivity tunnel is the only sanctioned path between them.` },
-    ]
-  },
-  'machine-network': {
-    color: '#4ade80', title: 'Guest Machine Network / Proxy',
-    cards: [
-      { title: 'What it is', body: `The underlying machine/infrastructure network where worker nodes run. This is the network that provides egress from worker nodes to the management cluster.` },
-      { title: 'Egress path', body: `Konnectivity agents on worker nodes use this network to establish outbound connections to the konnectivity-server service. On private clusters, this may traverse PrivateLink, VPN, or proxy infrastructure.` },
-      { title: 'Customer proxy', body: `If the customer has configured an HTTP/S proxy for egress, the <code>konnectivity-https-proxy</code> sidecar honors this configuration. The SOCKS5 proxy does <span class="warn">not</span> traverse customer HTTP proxies.` },
-      { title: 'Required egress', body: `Workers need egress to:<br>• Port 443 (Route strategy) or 8091 (NodePort/LB)<br>• Port 6443 (API server)<br>• Port 53 (DNS)<br>Restrict source IPs to worker subnet ranges.` },
-    ]
-  },
-  'openshift-apiserver': {
-    color: '#f59e0b', title: 'openshift-apiserver pod',
-    cards: [
-      { title: 'Sidecars', body: `Contains <code>konnectivity-https-proxy</code> sidecar. Uses HTTPS proxy (not SOCKS5) because OpenShift API traffic is HTTP-based and may need to honor customer proxy configuration.` },
-      { title: 'Aggregated API', body: `Registered as an APIService in the hosted cluster. API server routes requests through konnectivity tunnel, where the control plane konnectivity-agent intercepts and routes back to this pod.` },
-      { title: 'Connection path', body: `https-proxy sidecar &rarr; konnectivity-server-local :8090 &rarr; tunnel &rarr; data plane (for traffic targeting hosted cluster resources)` },
-      { title: 'Failure impact', body: `<span class="warn">If konnectivity is broken, OpenShift API requests fail.</span> This affects <code>oc</code> commands that hit OpenShift-specific APIs (routes, builds, deploymentconfigs, etc.).` },
-    ]
-  },
-  'oauth-apiserver': {
-    color: '#f59e0b', title: 'oauth-apiserver pod',
-    cards: [
-      { title: 'Sidecars', body: `Contains <strong>both</strong> <code>konnectivity-socks5-proxy</code> and <code>konnectivity-https-proxy</code>. Needs SOCKS5 for non-HTTP auth protocols (LDAP) and HTTPS for standard web traffic.` },
-      { title: 'Why both proxies', body: `OAuth can talk to identity providers using various protocols. LDAP (non-HTTP) goes through SOCKS5. OIDC/HTTP-based IdPs go through HTTPS proxy which can traverse customer proxies.` },
-      { title: 'Aggregated API', body: `Like openshift-apiserver, registered as an APIService. Traffic is routed through the konnectivity tunnel via the control plane agent.` },
-      { title: 'Failure impact', body: `<span class="warn">Broken tunnel = authentication failures.</span> Users cannot log in via <code>oc login</code> or the web console if the oauth-apiserver cannot be reached.` },
-    ]
-  },
-  cno: {
-    color: '#f59e0b', title: 'cluster-network-operator pod',
-    cards: [
-      { title: 'Sidecars', body: `Contains <code>konnectivity-socks5-proxy</code> sidecar. Uses SOCKS5 because CNO communicates with data plane network components using non-HTTP protocols.` },
-      { title: 'Purpose', body: `Manages the hosted cluster's network configuration — OVN-Kubernetes, network policies, etc. Needs to reach the data plane to observe and configure network state.` },
-      { title: 'Connection path', body: `socks5-proxy sidecar &rarr; konnectivity-server-local :8090 &rarr; tunnel &rarr; data plane network endpoints` },
-      { title: 'Failure impact', body: `<span class="warn">Network configuration changes may stall or fail</span> if the tunnel is broken. Existing network config continues to work, but updates won't apply.` },
-    ]
-  },
-  ovnkube: {
-    color: '#f59e0b', title: 'ovnkube-control-plane pod',
-    cards: [
-      { title: 'Sidecars', body: `Contains <code>konnectivity-socks5-proxy</code> sidecar. OVN control plane uses non-HTTP protocols (OVSDB, gRPC) to communicate with data plane OVN components.` },
-      { title: 'Purpose', body: `Runs the OVN-Kubernetes control plane for the hosted cluster. Manages logical network topology, flow programming, and network policy enforcement.` },
-      { title: 'Connection path', body: `socks5-proxy sidecar &rarr; konnectivity-server-local :8090 &rarr; tunnel &rarr; OVN components on worker nodes` },
-      { title: 'Failure impact', body: `<span class="warn">OVN control plane loses connectivity to data plane OVN.</span> New pods may not get network connectivity. Existing pod networking typically continues.` },
-    ]
-  },
-  'ingress-operator': {
-    color: '#f59e0b', title: 'ingress-operator pod',
-    cards: [
-      { title: 'Sidecars', body: `Contains <code>konnectivity-https-proxy</code> sidecar. Uses HTTPS proxy because ingress operator communicates via HTTP/HTTPS to manage router deployments.` },
-      { title: 'Purpose', body: `Manages the hosted cluster's ingress controllers (HAProxy routers). Needs to reach the data plane to configure and monitor router pods.` },
-      { title: 'Connection path', body: `https-proxy sidecar &rarr; konnectivity-server-local :8090 &rarr; tunnel &rarr; ingress controller pods on worker nodes` },
-      { title: 'Customer proxy', body: `The HTTPS proxy sidecar honors customer-configured HTTP/S proxy settings, important when the hosted cluster's ingress needs to reach external endpoints through a corporate proxy.` },
-    ]
-  },
-  packageserver: {
-    color: '#f59e0b', title: 'packageserver pod',
-    cards: [
-      { title: 'Sidecars', body: `Contains <code>konnectivity-socks5-proxy</code> sidecar. Uses SOCKS5 for communicating with OLM catalog sources on the data plane.` },
-      { title: 'Purpose', body: `Serves the PackageManifest API for OLM. Needs to reach catalog sources running on worker nodes to list available operators and their versions.` },
-      { title: 'Aggregated API', body: `Registered as an APIService. Traffic from the API server is routed through the konnectivity tunnel like other aggregated APIs.` },
-      { title: 'Failure impact', body: `<span class="warn">OLM operator catalog becomes unavailable.</span> <code>oc get packagemanifests</code> fails. Cannot browse or install operators from OperatorHub.` },
-    ]
-  },
-  'olm-operator': {
-    color: '#f59e0b', title: 'olm-operator pod',
-    cards: [
-      { title: 'Sidecars', body: `Contains <code>konnectivity-socks5-proxy</code> sidecar. Uses SOCKS5 for non-HTTP communication with data plane OLM components.` },
-      { title: 'Purpose', body: `Manages the Operator Lifecycle Manager for the hosted cluster. Handles operator installations, upgrades, and subscription management.` },
-      { title: 'Connection path', body: `socks5-proxy sidecar &rarr; konnectivity-server-local :8090 &rarr; tunnel &rarr; OLM components on data plane` },
-      { title: 'Failure impact', body: `<span class="warn">Operator installs and upgrades fail.</span> Existing installed operators continue to run, but lifecycle management operations stall.` },
-    ]
-  },
-  'catalog-operator': {
-    color: '#f59e0b', title: 'catalog-operator pod',
-    cards: [
-      { title: 'Sidecars', body: `Contains <code>konnectivity-socks5-proxy</code> sidecar. Uses SOCKS5 for catalog resolution traffic targeting data plane catalog sources.` },
-      { title: 'Purpose', body: `Resolves operator dependencies and manages CatalogSource resources. Communicates with catalog source pods (typically gRPC) running on worker nodes.` },
-      { title: 'Connection path', body: `socks5-proxy sidecar &rarr; konnectivity-server-local :8090 &rarr; tunnel &rarr; CatalogSource pods on data plane` },
-      { title: 'gRPC traffic', body: `Catalog resolution uses gRPC (non-HTTP), which is why this pod needs a SOCKS5 proxy rather than an HTTPS proxy. <span class="warn">SOCKS5 traffic cannot traverse customer HTTP proxies.</span>` },
-    ]
-  },
+var nodeData = {
+  kas: { color: '#3b82f6', title: 'kube-apiserver', cards: [
+    { title: 'Role', body: 'The Kubernetes API server for the hosted cluster. Runs as a pod in the control plane namespace of the management cluster. Listens on port <code>6443</code>.' },
+    { title: 'Egress Selector', body: 'Configured via <code>kas-egress-selector-config</code> ConfigMap. Routes all <strong>cluster connections</strong> (to kubelets, services) through konnectivity-server. Master and etcd connections are NOT routed through konnectivity.' },
+    { title: 'Konnectivity integration', body: 'konnectivity-server runs as a <strong>sidecar container</strong> in the same pod. Communication happens over loopback for minimal latency. The API server uses the <code>konnectivity-client</code> certificate to authenticate.' },
+    { title: 'HA', body: 'Typically 3 replicas. Each pod contains its own konnectivity-server sidecar, each generating a unique server ID at startup. Worker agents connect to all servers for full redundancy.' },
+  ]},
+  'konnectivity-server': { color: '#14b8a6', title: 'konnectivity-server', cards: [
+    { title: 'Role', body: 'Accepts proxy requests from the API server and proxy sidecars, then routes them through pre-established agent tunnels to reach the data plane. Runs as a sidecar in the kube-apiserver pod.' },
+    { title: 'Protocol', body: 'Uses <strong>HTTP-Connect mode</strong> (not gRPC) to support multiple client types — SOCKS5 proxies, HTTPS proxies, and the API server itself. Listens on a <strong>TCP port</strong> (not UDS) so it can be exposed as a Kubernetes Service.' },
+    { title: 'Two services', body: 'Exposed via two services:<br>• <code>konnectivity-server-local</code> :8090 — internal, for CP components<br>• <code>konnectivity-server</code> :8091 — external, for agent registration<br>Port 8090 is protected by NetworkPolicy.' },
+    { title: 'Important', body: '<span class="warn">Only accepts IP addresses, not DNS names, for proxy destinations.</span> This is relevant when debugging with curl — you must use node IPs, not hostnames.' },
+  ]},
+  'svc-local': { color: '#22d3ee', title: 'konnectivity-server-local-service', cards: [
+    { title: 'Purpose', body: 'Internal service for control plane components to connect to konnectivity-server. Port <code>8090</code>. Protected by NetworkPolicy — only pods in the control plane namespace can reach it.' },
+    { title: 'Clients', body: 'Used by the kube-apiserver (via egress selector), SOCKS5 proxy sidecars, and HTTPS proxy sidecars. All authenticate with the <code>konnectivity-client</code> certificate.' },
+    { title: 'Central hub', body: 'As shown in the diagram, <strong>every proxy sidecar</strong> in the control plane connects to this service. It is the single entry point for all tunneled traffic from operators to the data plane.' },
+    { title: 'Debug', body: 'You can port-forward this service for manual testing:<br><code>oc port-forward svc/konnectivity-server-local 8090:8090</code><br>Then use curl with proxy flags and mTLS certs.' },
+  ]},
+  'svc-cluster': { color: '#22d3ee', title: 'konnectivity-server-service', cards: [
+    { title: 'Purpose', body: 'Externally exposed service for worker node konnectivity-agents to establish reverse tunnels. Port <code>8091</code>. Exposed via Route, NodePort, or LoadBalancer depending on platform.' },
+    { title: 'Publishing strategies', body: '• <strong>Route</strong> (AWS/Azure/GCP): via HCP router on :443<br>• <strong>NodePort</strong> (Agent/Bare Metal): direct on :8091<br>• <strong>LoadBalancer</strong>: dedicated cloud LB on :8091' },
+    { title: 'Private clusters', body: 'On AWS Private: exposed via Route + PrivateLink. On Azure/ARO HCP: SNI-based routing through shared HAProxy in <code>hypershift-sharedingress</code> namespace. Uses <code>hypershift.local</code> hostname.' },
+    { title: 'Worker egress', body: 'Workers must have egress to this service. Required ports:<br>• :443 (Route strategy)<br>• :8091 (NodePort/LB strategy)<br><span class="warn">Firewall blocking these ports = tunnel failure.</span>' },
+  ]},
+  'agent-data': { color: '#14b8a6', title: 'konnectivity-agent (Data Plane)', cards: [
+    { title: 'Role', body: 'Runs as a <strong>DaemonSet</strong> in <code>kube-system</code> on every worker node. Establishes and maintains reverse tunnels to konnectivity-server, then forwards incoming traffic to local kubelets and services.' },
+    { title: 'Registration', body: 'Initiates <strong>outbound</strong> connections to konnectivity-server on port 8091 via the Guest Machine Network. Server responds with its unique ID and total server count. Agent keeps dialing until connected to all unique servers for full HA.' },
+    { title: 'Certificates', body: 'Authenticates with <code>konnectivity-agent</code> client certificate, signed by the <code>konnectivity-signer</code> CA. CA bundle distributed via <code>konnectivity-ca-bundle</code> ConfigMap in <code>kube-system</code>.' },
+    { title: 'Traffic forwarding', body: 'Once tunnel is established, the agent forwards requests from the control plane to local targets — typically kubelet on port 10250. This enables <code>kubectl logs</code>, <code>exec</code>, <code>port-forward</code>, and webhook calls.' },
+  ]},
+  'agent-cp': { color: '#14b8a6', title: 'konnectivity-agent (Control Plane)', cards: [
+    { title: 'Role', body: 'A separate <strong>Deployment</strong> running in the control plane namespace. Handles traffic specifically for <strong>aggregated API services</strong> — openshift-apiserver, oauth-apiserver, packageserver.' },
+    { title: '--agent-identifiers', body: 'Uses the <code>--agent-identifiers</code> flag to filter traffic, accepting <strong>only</strong> traffic destined for control plane aggregated API services. <span class="warn">Without this filter, general cluster traffic could be incorrectly routed to this agent.</span>' },
+    { title: 'How it works', body: 'A headless Service (no selector) + Endpoints are created in the hosted cluster\'s default namespace, pointing to the control plane service IP. API server routes APIService requests through the tunnel, and this agent intercepts and routes back to the actual server in the CP namespace.' },
+    { title: 'Connections', body: 'Connected from konnectivity-server via <strong>Default Route</strong> (general traffic) and <strong>HCP APIServices</strong> (aggregated API traffic). Registers with the konnectivity-server-service.' },
+  ]},
+  kubelet: { color: '#4ade80', title: 'kubelet', cards: [
+    { title: 'Role', body: 'The node agent on each worker node. Listens on port <code>10250</code>. Handles pod lifecycle, container logs, exec sessions, and metrics endpoints.' },
+    { title: 'Reached via tunnel', body: 'In HyperShift, the API server cannot reach kubelets directly (different network). All kubelet traffic goes through the konnectivity tunnel: API server → konnectivity-server :8090 → tunnel → agent → kubelet :10250.' },
+    { title: 'Functional test', body: '<span class="ok">Quick smoke test:</span> run <code>kubectl logs &lt;pod&gt;</code> for a pod in the hosted cluster. If it works, the konnectivity tunnel is functional end-to-end.' },
+    { title: 'When it fails', body: '<span class="warn">If the tunnel is broken:</span> <code>kubectl logs</code>, <code>kubectl exec</code>, <code>kubectl port-forward</code> all fail. Webhooks also fail since they need to reach services on worker nodes.' },
+  ]},
+  'guest-network': { color: '#4ade80', title: 'Guest Service Network', cards: [
+    { title: 'What it is', body: 'The pod and service CIDR ranges of the hosted cluster. Services, endpoints, and pod IPs all live in this network space on the worker nodes.' },
+    { title: 'Reachable via', body: 'Control plane components reach guest service network endpoints through the konnectivity tunnel. The proxy sidecars (SOCKS5 and HTTPS) facilitate this for operator pods.' },
+    { title: 'SOCKS5 vs HTTPS proxy', body: '• <strong>SOCKS5</strong>: for non-HTTP traffic (gRPC, LDAP) targeting data plane endpoints<br>• <strong>HTTPS</strong>: for traffic that must honor customer-supplied HTTP/S proxy configuration' },
+    { title: 'Network isolation', body: 'Guest and management cluster networks are intentionally separate. This isolation is a security feature of HyperShift — the konnectivity tunnel is the only sanctioned path between them.' },
+  ]},
+  'machine-network': { color: '#4ade80', title: 'Guest Machine Network / Proxy', cards: [
+    { title: 'What it is', body: 'The underlying machine/infrastructure network where worker nodes run. Provides egress from worker nodes to the management cluster.' },
+    { title: 'Egress path', body: 'Konnectivity agents on worker nodes use this network to establish outbound connections to the konnectivity-server-service. On private clusters, this may traverse PrivateLink, VPN, or proxy infrastructure.' },
+    { title: 'Customer proxy', body: 'If the customer has configured an HTTP/S proxy for egress, the <code>konnectivity-https-proxy</code> sidecar honors this configuration. The SOCKS5 proxy does <span class="warn">not</span> traverse customer HTTP proxies.' },
+    { title: 'Required egress', body: 'Workers need egress to:<br>• Port 443 (Route strategy) or 8091 (NodePort/LB)<br>• Port 6443 (API server)<br>• Port 53 (DNS)<br>Restrict source IPs to worker subnet ranges.' },
+  ]},
+  'openshift-apiserver': { color: '#f59e0b', title: 'openshift-apiserver pod', cards: [
+    { title: 'Sidecars', body: 'Contains <code>konnectivity-https-proxy</code> sidecar. Uses HTTPS proxy (not SOCKS5) because OpenShift API traffic is HTTP-based and may need to honor customer proxy configuration.' },
+    { title: 'Aggregated API', body: 'Registered as an APIService in the hosted cluster. API server routes requests through konnectivity tunnel, where the control plane konnectivity-agent intercepts and routes back to this pod.' },
+    { title: 'Connection path', body: 'https-proxy sidecar → konnectivity-server-local :8090 → tunnel → data plane' },
+    { title: 'Failure impact', body: '<span class="warn">If konnectivity is broken, OpenShift API requests fail.</span> Affects <code>oc</code> commands that hit OpenShift-specific APIs (routes, builds, etc.).' },
+  ]},
+  'oauth-apiserver': { color: '#f59e0b', title: 'oauth-apiserver pod', cards: [
+    { title: 'Sidecars', body: 'Contains <strong>both</strong> <code>konnectivity-socks5-proxy</code> and <code>konnectivity-https-proxy</code>. Needs SOCKS5 for non-HTTP auth protocols (LDAP) and HTTPS for standard web traffic.' },
+    { title: 'Why both proxies', body: 'OAuth can talk to identity providers using various protocols. LDAP (non-HTTP) goes through SOCKS5. OIDC/HTTP-based IdPs go through HTTPS proxy which can traverse customer proxies.' },
+    { title: 'Aggregated API', body: 'Like openshift-apiserver, registered as an APIService. Traffic is routed through the konnectivity tunnel via the control plane agent.' },
+    { title: 'Failure impact', body: '<span class="warn">Broken tunnel = authentication failures.</span> Users cannot log in via <code>oc login</code> or the web console.' },
+  ]},
+  cno: { color: '#f59e0b', title: 'cluster-network-operator pod', cards: [
+    { title: 'Sidecars', body: 'Contains <code>konnectivity-socks5-proxy</code> sidecar. Uses SOCKS5 because CNO communicates with data plane network components using non-HTTP protocols.' },
+    { title: 'Purpose', body: 'Manages the hosted cluster\'s network configuration — OVN-Kubernetes, network policies, etc.' },
+    { title: 'Connection path', body: 'socks5-proxy sidecar → konnectivity-server-local :8090 → tunnel → data plane network endpoints' },
+    { title: 'Failure impact', body: '<span class="warn">Network configuration changes may stall or fail</span> if the tunnel is broken. Existing config continues to work.' },
+  ]},
+  ovnkube: { color: '#f59e0b', title: 'ovnkube-control-plane pod', cards: [
+    { title: 'Sidecars', body: 'Contains <code>konnectivity-socks5-proxy</code> sidecar. OVN uses non-HTTP protocols (OVSDB, gRPC) to communicate with data plane OVN components.' },
+    { title: 'Purpose', body: 'Runs the OVN-Kubernetes control plane. Manages logical network topology, flow programming, and network policy enforcement.' },
+    { title: 'Connection path', body: 'socks5-proxy sidecar → konnectivity-server-local :8090 → tunnel → OVN components on worker nodes' },
+    { title: 'Failure impact', body: '<span class="warn">OVN control plane loses connectivity to data plane.</span> New pods may not get networking. Existing networking continues.' },
+  ]},
+  'ingress-operator': { color: '#f59e0b', title: 'ingress-operator pod', cards: [
+    { title: 'Sidecars', body: 'Contains <code>konnectivity-https-proxy</code> sidecar. Uses HTTPS proxy because ingress operator communicates via HTTP/HTTPS.' },
+    { title: 'Purpose', body: 'Manages the hosted cluster\'s ingress controllers (HAProxy routers).' },
+    { title: 'Connection path', body: 'https-proxy sidecar → konnectivity-server-local :8090 → tunnel → ingress controller pods' },
+    { title: 'Customer proxy', body: 'The HTTPS proxy sidecar honors customer-configured HTTP/S proxy settings for reaching external endpoints.' },
+  ]},
+  packageserver: { color: '#f59e0b', title: 'packageserver pod', cards: [
+    { title: 'Sidecars', body: 'Contains <code>konnectivity-socks5-proxy</code> sidecar. Uses SOCKS5 for communicating with OLM catalog sources.' },
+    { title: 'Purpose', body: 'Serves the PackageManifest API for OLM. Needs to reach catalog sources on worker nodes.' },
+    { title: 'Aggregated API', body: 'Registered as an APIService. Traffic routed through the konnectivity tunnel like other aggregated APIs.' },
+    { title: 'Failure impact', body: '<span class="warn">OLM catalog unavailable.</span> <code>oc get packagemanifests</code> fails. Cannot install operators from OperatorHub.' },
+  ]},
+  'olm-operator': { color: '#f59e0b', title: 'olm-operator pod', cards: [
+    { title: 'Sidecars', body: 'Contains <code>konnectivity-socks5-proxy</code> sidecar for non-HTTP communication with data plane OLM components.' },
+    { title: 'Purpose', body: 'Manages the Operator Lifecycle Manager. Handles installs, upgrades, and subscriptions.' },
+    { title: 'Connection path', body: 'socks5-proxy sidecar → konnectivity-server-local :8090 → tunnel → OLM components on data plane' },
+    { title: 'Failure impact', body: '<span class="warn">Operator installs and upgrades fail.</span> Existing operators continue running.' },
+  ]},
+  'catalog-operator': { color: '#f59e0b', title: 'catalog-operator pod', cards: [
+    { title: 'Sidecars', body: 'Contains <code>konnectivity-socks5-proxy</code> sidecar for catalog resolution traffic.' },
+    { title: 'Purpose', body: 'Resolves operator dependencies and manages CatalogSource resources. Uses gRPC to talk to catalog pods.' },
+    { title: 'Connection path', body: 'socks5-proxy sidecar → konnectivity-server-local :8090 → tunnel → CatalogSource pods' },
+    { title: 'gRPC traffic', body: 'Catalog resolution uses gRPC (non-HTTP), hence SOCKS5 not HTTPS. <span class="warn">SOCKS5 cannot traverse customer HTTP proxies.</span>' },
+  ]},
 };
 
-let activeNode = null;
-
+var activeNode = null;
 function selectNode(id) {
-  // Clear previous
-  document.querySelectorAll('.node-box.active, .svc-box.active').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nb.active, .op-row.active').forEach(function(el) { el.classList.remove('active'); });
   activeNode = id;
-
-  // Activate
-  const box = document.getElementById('box-' + id);
+  var box = document.getElementById('box-' + id);
   if (box) box.classList.add('active');
-
-  const data = nodeData[id];
+  document.querySelectorAll('.op-row').forEach(function(row) {
+    var oc = row.getAttribute('onclick');
+    if (oc && oc.indexOf("'" + id + "'") !== -1) row.classList.add('active');
+  });
+  var data = nodeData[id];
   if (!data) return;
-
   document.getElementById('detail-hint').style.display = 'none';
-  const content = document.getElementById('detail-content');
+  var content = document.getElementById('detail-content');
   content.style.display = 'grid';
-
-  const panel = document.getElementById('detail-panel');
-  const existing = panel.querySelector('h3');
+  var panel = document.getElementById('detail-panel');
+  var existing = panel.querySelector('h3');
   if (existing) existing.remove();
-
-  const h3 = document.createElement('h3');
+  var h3 = document.createElement('h3');
   h3.innerHTML = '<div class="dot" style="background:' + data.color + '"></div>' + data.title;
   panel.insertBefore(h3, content);
-
   content.innerHTML = data.cards.map(function(c) {
     return '<div class="detail-card"><div class="detail-card-title">' + c.title + '</div><div class="detail-card-body">' + c.body + '</div></div>';
   }).join('');
-
-  // Scroll to detail panel
   panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 }
 </script>
