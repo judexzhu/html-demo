@@ -365,10 +365,78 @@
 </div>
 </div>
 
-<!-- Detail panel -->
+<!-- Detail panel (between topology and RBAC so both are visible without scrolling) -->
 <div class="detail-panel" id="detail-panel">
-  <div id="detail-hint" style="font-size:12px;color:var(--text-muted);">&larr; Select a component above to see details.</div>
+  <div id="detail-hint" style="font-size:12px;color:var(--text-muted);">&larr; Select a component above or below to see details.</div>
   <div class="detail-content" id="detail-content" style="display:none;"></div>
+</div>
+
+<!-- ════════════════ MANAGED IDENTITIES & RBAC ════════════════ -->
+<div class="topo">
+<div class="topo-inner" style="min-width:700px;">
+  <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:16px;">Managed Identities &amp; Role Assignments</div>
+  <div style="font-size:11px;color:var(--text-dim);margin-bottom:16px;line-height:1.7;">
+    Each managed identity follows least-privilege. Click any identity to see its role, scope, and purpose.
+  </div>
+
+  <!-- Control Plane Identities -->
+  <div class="zone" style="border-color:var(--blue-border); margin-bottom:20px;">
+    <div class="zone-lbl" style="color:#93c5fd;">Control Plane Managed Identities (10)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+
+      <div class="node" onclick="selectNode('mi-cluster-api')">
+        <div class="nb c-blue" id="box-mi-cluster-api"><div class="nl">cluster-api-azure</div><div class="ns">HCP Cluster API Provider</div><div class="ns">Scope: Subnet + VNet</div></div>
+      </div>
+      <div class="node" onclick="selectNode('mi-control-plane')">
+        <div class="nb c-blue" id="box-mi-control-plane"><div class="nl">control-plane</div><div class="ns">HCP CP Operator</div><div class="ns">Scope: VNet + NSG</div></div>
+      </div>
+      <div class="node" onclick="selectNode('mi-kms')">
+        <div class="nb c-amber" id="box-mi-kms"><div class="nl">kms</div><div class="ns">Key Vault Crypto User</div><div class="ns">Scope: Key Vault</div></div>
+      </div>
+      <div class="node" onclick="selectNode('mi-ccm')">
+        <div class="nb c-blue" id="box-mi-ccm"><div class="nl">cloud-controller-manager</div><div class="ns">Cloud Controller Mgr</div><div class="ns">Scope: Subnet + NSG</div></div>
+      </div>
+      <div class="node" onclick="selectNode('mi-ingress')">
+        <div class="nb c-blue" id="box-mi-ingress"><div class="nl">ingress</div><div class="ns">HCP Cluster Ingress Op</div><div class="ns">Scope: Subnet</div></div>
+      </div>
+      <div class="node" onclick="selectNode('mi-disk-csi')">
+        <div class="nb c-blue" id="box-mi-disk-csi"><div class="nl">disk-csi-driver</div><div class="ns">Reader</div><div class="ns">Scope: Resource Group</div></div>
+      </div>
+      <div class="node" onclick="selectNode('mi-file-csi')">
+        <div class="nb c-blue" id="box-mi-file-csi"><div class="nl">file-csi-driver</div><div class="ns">HCP File Storage Op</div><div class="ns">Scope: Subnet + NSG</div></div>
+      </div>
+      <div class="node" onclick="selectNode('mi-image-registry')">
+        <div class="nb c-blue" id="box-mi-image-registry"><div class="nl">image-registry</div><div class="ns">Reader</div><div class="ns">Scope: Resource Group</div></div>
+      </div>
+      <div class="node" onclick="selectNode('mi-network')">
+        <div class="nb c-blue" id="box-mi-network"><div class="nl">cloud-network-config</div><div class="ns">HCP Network Operator</div><div class="ns">Scope: Subnet + VNet</div></div>
+      </div>
+      <div class="node" onclick="selectNode('mi-service')">
+        <div class="nb c-blue" id="box-mi-service"><div class="nl">service</div><div class="ns">HCP Service MI + Network Contributor</div><div class="ns">Scope: VNet + NSG</div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Dataplane Identities -->
+  <div class="zone" style="border-color:var(--green-border);">
+    <div class="zone-lbl" style="color:var(--green);">Dataplane Managed Identities (3 &middot; OIDC Federated)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+
+      <div class="node" onclick="selectNode('mi-dp-disk')">
+        <div class="nb c-green" id="box-mi-dp-disk"><div class="nl">disk-csi-driver</div><div class="ns">Federated Credential</div><div class="ns">OIDC &rarr; CP disk-csi MI</div></div>
+      </div>
+      <div class="node" onclick="selectNode('mi-dp-file')">
+        <div class="nb c-green" id="box-mi-dp-file"><div class="nl">file-csi-driver</div><div class="ns">Federated Credential</div><div class="ns">OIDC &rarr; CP file-csi MI</div></div>
+      </div>
+      <div class="node" onclick="selectNode('mi-dp-registry')">
+        <div class="nb c-green" id="box-mi-dp-registry"><div class="nl">image-registry</div><div class="ns">Federated Credential</div><div class="ns">OIDC &rarr; CP image-registry MI</div></div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
 </div>
 
 <!-- Reference cards -->
@@ -479,14 +547,96 @@ var nodeData = {
     { title: 'Auto-registration', body: 'A Private DNS Zone Group (<code>kv-private-ep-dns-group</code>) automatically registers an A record for the private endpoint. No manual DNS configuration needed.' },
     { title: 'Security', body: '<span class="ok">Prevents DNS hijacking.</span> When the control plane resolves the Key Vault FQDN, the private DNS zone intercepts and returns the private IP. The request never reaches public DNS.' },
   ]},
+  'mi-cluster-api': { color: '#3b82f6', title: 'cluster-api-azure', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-cp-cluster-api-azure-{suffix}</code>. Used by the Cluster API Azure provider.' },
+    { title: 'Role', body: '<strong>HCP Cluster API Provider</strong> (<code>88366f10-ed47-4cc0-9fab-c8a06148393e</code>). Grants permissions to manage cluster infrastructure in the customer subnet.' },
+    { title: 'Scope', body: 'Assigned on: <strong>Customer Subnet</strong> and <strong>VNet</strong>. Allows creating/managing worker node NICs and load balancers within the subnet.' },
+    { title: 'Additional', body: 'Also has <strong>Reader</strong> role on all other control plane managed identities for coordination.' },
+  ]},
+  'mi-control-plane': { color: '#3b82f6', title: 'control-plane', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-cp-control-plane-{suffix}</code>. Used by the HCP control plane operator.' },
+    { title: 'Role', body: '<strong>HCP Control Plane Operator</strong> (<code>fc0c873f-45e9-4d0d-a7d1-585aab30c6ed</code>). Manages VNet and NSG resources for the cluster.' },
+    { title: 'Scope', body: 'Assigned on: <strong>VNet</strong> and <strong>NSG</strong>. Can read/update VNet configuration and manage security rules.' },
+    { title: 'Purpose', body: 'Enables the control plane to configure networking for the hosted cluster — routes, security rules, and VNet peering.' },
+  ]},
+  'mi-kms': { color: '#f59e0b', title: 'kms', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-cp-kms-{suffix}</code>. Dedicated to KMS (etcd encryption) operations.' },
+    { title: 'Role', body: '<strong>Key Vault Crypto User</strong> (<code>12338af0-0e69-4776-bea7-57ae8d297424</code>). Grants encrypt, decrypt, wrap key, and unwrap key permissions only.' },
+    { title: 'Scope', body: 'Assigned on: <strong>Key Vault</strong> only. Cannot access any other resource. Strictest least-privilege of all identities.' },
+    { title: 'Swift path', body: 'With Swift: authenticates via injected NIC → private DNS → private endpoint → Key Vault. <span class="ok">All on private backbone.</span><br>Without Swift: authenticates via public endpoint.' },
+  ]},
+  'mi-ccm': { color: '#3b82f6', title: 'cloud-controller-manager', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-cp-cloud-controller-manager-{suffix}</code>.' },
+    { title: 'Role', body: '<strong>Cloud Controller Manager</strong> (<code>a1f96423-95ce-4224-ab27-4e3dc72facd4</code>). Manages cloud resources for the Kubernetes cloud controller.' },
+    { title: 'Scope', body: 'Assigned on: <strong>Customer Subnet</strong> and <strong>NSG</strong>. Creates and manages load balancers, public IPs, and security rules for services.' },
+    { title: 'Purpose', body: 'Enables Kubernetes Service type LoadBalancer, node lifecycle management, and route configuration in Azure.' },
+  ]},
+  'mi-ingress': { color: '#3b82f6', title: 'ingress', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-cp-ingress-{suffix}</code>. Used by the cluster ingress operator.' },
+    { title: 'Role', body: '<strong>HCP Cluster Ingress Operator</strong> (<code>0336e1d3-7a87-462b-b6db-342b63f7802c</code>).' },
+    { title: 'Scope', body: 'Assigned on: <strong>Customer Subnet</strong>. Manages ingress controller (HAProxy router) networking — creates load balancer and DNS entries.' },
+    { title: 'Purpose', body: 'Configures the default IngressController and its associated Azure Load Balancer for external traffic.' },
+  ]},
+  'mi-disk-csi': { color: '#3b82f6', title: 'disk-csi-driver (CP)', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-cp-disk-csi-driver-{suffix}</code>. Control plane side of disk CSI.' },
+    { title: 'Role', body: '<strong>Reader</strong> (<code>acdd72a7-3385-48ef-bd42-f606fba81ae7</code>) on the resource group. Allows discovering disk resources.' },
+    { title: 'Scope', body: 'Assigned on: <strong>Resource Group</strong>. Read-only access to discover and manage Azure Disk resources.' },
+    { title: 'Dataplane federation', body: 'Has a <strong>Federated Credential</strong> allowing the dataplane disk-csi-driver (running on worker nodes via OIDC) to assume this identity.' },
+  ]},
+  'mi-file-csi': { color: '#3b82f6', title: 'file-csi-driver (CP)', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-cp-file-csi-driver-{suffix}</code>. Control plane side of file CSI.' },
+    { title: 'Role', body: '<strong>HCP File Storage Operator</strong> (<code>0d7aedc0-15fd-4a67-a412-efad370c947e</code>). Manages Azure Files storage accounts and shares.' },
+    { title: 'Scope', body: 'Assigned on: <strong>Customer Subnet</strong> and <strong>NSG</strong>. Needs subnet access for storage account private endpoints and NSG for network rules.' },
+    { title: 'Dataplane federation', body: 'Has a Federated Credential for OIDC-based assumption from worker node pods.' },
+  ]},
+  'mi-image-registry': { color: '#3b82f6', title: 'image-registry (CP)', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-cp-image-registry-{suffix}</code>. Control plane side of image registry operator.' },
+    { title: 'Role', body: '<strong>Reader</strong> (<code>acdd72a7-3385-48ef-bd42-f606fba81ae7</code>). Read-only access for resource discovery.' },
+    { title: 'Scope', body: 'Assigned on: <strong>Resource Group</strong>. Discovers storage accounts used for the internal image registry.' },
+    { title: 'Dataplane federation', body: 'Has a Federated Credential allowing worker node pods to assume this identity via OIDC for pushing/pulling images.' },
+  ]},
+  'mi-network': { color: '#3b82f6', title: 'cloud-network-config', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-cp-cloud-network-config-{suffix}</code>. Used by the network operator.' },
+    { title: 'Role', body: '<strong>HCP Network Operator</strong> (<code>be7a6435-15ae-4171-8f30-4a343eff9e8f</code>). Manages cluster networking configuration.' },
+    { title: 'Scope', body: 'Assigned on: <strong>Customer Subnet</strong> and <strong>VNet</strong>. Can read/update subnet and VNet settings for OVN-Kubernetes.' },
+    { title: 'Purpose', body: 'Configures OVN-Kubernetes overlay networking, manages egress IPs, and updates network policies that require Azure-level changes.' },
+  ]},
+  'mi-service': { color: '#3b82f6', title: 'service (coordination)', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-cp-service-{suffix}</code>. Service-level coordination identity.' },
+    { title: 'Roles', body: '<strong>HCP Service Managed Identity</strong> (<code>c0ff367d-66d8-445e-917c-583feb0ef0d4</code>) + <strong>Network Contributor</strong> (<code>4d97b98b-1d4f-4787-a291-c67834d212e7</code>). Broadest network permissions.' },
+    { title: 'Scope', body: 'Assigned on: <strong>VNet</strong> and <strong>NSG</strong>. The Network Contributor role is temporary and used during initial cluster setup.' },
+    { title: 'Purpose', body: 'Coordinates between control plane components. Manages VNet integration, subnet delegation setup, and initial network configuration during cluster creation.' },
+  ]},
+  'mi-dp-disk': { color: '#4ade80', title: 'disk-csi-driver (dataplane)', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-dp-disk-csi-driver-{suffix}</code>. Runs on worker nodes.' },
+    { title: 'Federation', body: 'Uses <strong>OIDC Federated Credential</strong> (<code>ef318e2a-8334-4a05-9e4a-295a196c6a6e</code>) to assume the control plane disk-csi-driver identity.' },
+    { title: 'How it works', body: 'Worker node pods present an OIDC token → Azure AD validates against the cluster\'s OIDC issuer → grants temporary credentials for the CP disk-csi identity → can manage Azure Disks.' },
+    { title: 'Purpose', body: 'Enables PersistentVolume provisioning on worker nodes. Pods can dynamically create/attach Azure Disks via CSI.' },
+  ]},
+  'mi-dp-file': { color: '#4ade80', title: 'file-csi-driver (dataplane)', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-dp-file-csi-driver-{suffix}</code>. Runs on worker nodes.' },
+    { title: 'Federation', body: 'Uses <strong>OIDC Federated Credential</strong> to assume the control plane file-csi-driver identity.' },
+    { title: 'How it works', body: 'Same OIDC federation pattern as disk-csi. Worker pod → OIDC token → Azure AD → CP file-csi MI → manages Azure Files shares.' },
+    { title: 'Purpose', body: 'Enables Azure Files PersistentVolume provisioning. Supports ReadWriteMany access mode for shared file storage.' },
+  ]},
+  'mi-dp-registry': { color: '#4ade80', title: 'image-registry (dataplane)', cards: [
+    { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-dp-image-registry-{suffix}</code>. Runs on worker nodes.' },
+    { title: 'Federation', body: 'Uses <strong>OIDC Federated Credential</strong> to assume the control plane image-registry identity.' },
+    { title: 'How it works', body: 'Worker pods running the image registry use OIDC to get Azure credentials for the storage account backing the internal registry.' },
+    { title: 'Purpose', body: 'Allows the internal OpenShift image registry on worker nodes to push/pull images to/from an Azure Storage Account.' },
+  ]},
 };
 
 var activeNode = null;
 function selectNode(id) {
-  document.querySelectorAll('.nb.active').forEach(function(el) { el.classList.remove('active'); });
+  document.querySelectorAll('.nb.active, .op-row.active').forEach(function(el) { el.classList.remove('active'); });
   activeNode = id;
   var box = document.getElementById('box-' + id);
   if (box) box.classList.add('active');
+  document.querySelectorAll('.op-row').forEach(function(row) {
+    var oc = row.getAttribute('onclick');
+    if (oc && oc.indexOf("'" + id + "'") !== -1) row.classList.add('active');
+  });
   var data = nodeData[id];
   if (!data) return;
   document.getElementById('detail-hint').style.display = 'none';
