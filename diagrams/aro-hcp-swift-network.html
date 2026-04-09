@@ -264,11 +264,11 @@
     <div class="zone-lbl" style="color:var(--cyan);">Customer VNet (10.0.0.0/16)</div>
 
     <!-- Two subnets side by side, centered -->
-    <div class="row-c gap-20" style="align-items:flex-start; flex-wrap:nowrap;">
+    <div class="row-c gap-16" style="align-items:flex-start; flex-wrap:wrap;">
 
       <!-- Left: VNet Integration Subnet -->
-      <div class="col gap-12" style="flex-shrink:0;">
-        <div class="pod-box" style="border-color:var(--teal-border);">
+      <div class="col gap-12">
+        <div class="pod-box" style="border-color:var(--teal-border); min-width:280px;">
           <div class="pod-lbl" style="color:var(--teal);">VNet Integration Subnet (10.0.1.0/24)</div>
           <div class="col gap-8">
             <div class="node" onclick="selectNode('integration-subnet')">
@@ -289,16 +289,16 @@
         </div>
       </div>
 
-      <!-- Middle: arrows between subnets -->
-      <div class="col gap-12" style="padding-top:80px; flex-shrink:0;">
-        <div class="ha" style="width:64px;">
+      <!-- Middle: arrow between subnets -->
+      <div class="col" style="padding-top:80px;">
+        <div class="ha" style="width:56px;">
           <div class="ha-line"><span class="ha-label">private backbone</span></div>
           <div class="ha-head"></div>
         </div>
       </div>
 
       <!-- Right: Customer Subnet -->
-      <div class="col gap-12" style="flex-shrink:0;">
+      <div class="col gap-12">
         <div class="pod-box">
           <div class="pod-lbl">Customer Subnet (10.0.0.0/24)</div>
 
@@ -349,14 +349,18 @@
 
     </div>
 
-    <!-- Private DNS Zone below, centered -->
-    <div class="col" style="margin-top:16px;">
+    <!-- Private DNS components below, centered -->
+    <div class="row-c gap-12" style="margin-top:16px; flex-wrap:wrap;">
       <div class="node" onclick="selectNode('private-dns')">
-        <div class="nb c-purple" id="box-private-dns" style="padding:8px 16px;">
-          <div class="nl">Private DNS Zone</div>
-          <div class="ns">privatelink.vaultcore.azure.net</div>
-          <div class="ns">VNet Link &middot; auto-registered A record</div>
-        </div>
+        <div class="nb c-purple" id="box-private-dns"><div class="nl">Private DNS Zone</div><div class="ns">privatelink.vaultcore.azure.net</div></div>
+      </div>
+      <div class="ha" style="width:32px;"><div class="ha-line"></div><div class="ha-head"></div></div>
+      <div class="node" onclick="selectNode('dns-vnet-link')">
+        <div class="nb c-purple" id="box-dns-vnet-link"><div class="nl">DNS Zone VNet Link</div><div class="ns">links zone to customer VNet</div></div>
+      </div>
+      <div class="ha" style="width:32px;"><div class="ha-line"></div><div class="ha-head"></div></div>
+      <div class="node" onclick="selectNode('dns-zone-group')">
+        <div class="nb c-purple" id="box-dns-zone-group"><div class="nl">DNS Zone Group</div><div class="ns">auto-registers KV A record</div></div>
       </div>
     </div>
 
@@ -543,9 +547,21 @@ var nodeData = {
   ]},
   'private-dns': { color: '#a78bfa', title: 'Private DNS Zone', cards: [
     { title: 'Purpose', body: 'Ensures that <code>*.vault.azure.net</code> resolves to the private endpoint IP instead of the public IP. Zone: <code>privatelink.vaultcore.azure.net</code>.' },
-    { title: 'VNet Link', body: 'Linked to the customer VNet with registration disabled. This makes the DNS zone visible to all resources in the VNet, including the injected NIC from the control plane.' },
-    { title: 'Auto-registration', body: 'A Private DNS Zone Group (<code>kv-private-ep-dns-group</code>) automatically registers an A record for the private endpoint. No manual DNS configuration needed.' },
-    { title: 'Security', body: '<span class="ok">Prevents DNS hijacking.</span> When the control plane resolves the Key Vault FQDN, the private DNS zone intercepts and returns the private IP. The request never reaches public DNS.' },
+    { title: 'How it works', body: 'When the control plane resolves <code>{vault-name}.vault.azure.net</code>, this zone intercepts and returns the private endpoint IP instead of the public IP.' },
+    { title: 'Bicep', body: 'Defined in <code>customer-infra.bicep</code> as <code>Microsoft.Network/privateDnsZones@2020-06-01</code>. Location: global. Only created when <code>privateKeyVault=true</code>.' },
+    { title: 'Security', body: '<span class="ok">Prevents DNS hijacking.</span> The private DNS zone ensures the control plane never resolves Key Vault to its public IP.' },
+  ]},
+  'dns-vnet-link': { color: '#a78bfa', title: 'DNS Zone VNet Link', cards: [
+    { title: 'Purpose', body: 'Links the Private DNS Zone to the customer VNet, making private DNS resolution available to all resources in the VNet — including the injected NIC from the control plane.' },
+    { title: 'Configuration', body: 'Registration enabled: <code>false</code>. The VNet link only makes the zone visible; actual A record registration is handled by the DNS Zone Group.' },
+    { title: 'Bicep', body: '<code>Microsoft.Network/privateDnsZones/virtualNetworkLinks@2020-06-01</code>. Name generated via <code>uniqueString()</code>. Location: global.' },
+    { title: 'Without this', body: '<span class="warn">Without this link, the Private DNS Zone would not be visible inside the VNet.</span> DNS queries would bypass the private zone and resolve to the public Key Vault IP.' },
+  ]},
+  'dns-zone-group': { color: '#a78bfa', title: 'DNS Zone Group', cards: [
+    { title: 'Purpose', body: 'Automatically registers the Private Endpoint\'s IP address as an A record in the Private DNS Zone. No manual DNS configuration needed.' },
+    { title: 'How it works', body: 'When the Private Endpoint gets an IP (e.g. 10.0.0.4), this group creates: <code>{vault-name}.vault.azure.net → 10.0.0.4</code> in the Private DNS Zone.' },
+    { title: 'Bicep', body: '<code>Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-09-01</code>. Name: <code>kv-private-ep-dns-group</code>. Depends on VNet Link.' },
+    { title: 'Dependencies', body: 'Parent: Private Endpoint. References: Private DNS Zone. Must be created after the DNS Zone VNet Link exists.' },
   ]},
   'mi-cluster-api': { color: '#3b82f6', title: 'cluster-api-azure', cards: [
     { title: 'Identity', body: 'User-assigned managed identity: <code>{clusterName}-cp-cluster-api-azure-{suffix}</code>. Used by the Cluster API Azure provider.' },

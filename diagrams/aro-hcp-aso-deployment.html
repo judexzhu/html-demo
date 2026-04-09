@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ARO HCP via ASO — Deployment Architecture</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #0f1117; --bg2: #161b26; --bg3: #1e2435;
+    --border: rgba(255,255,255,0.08); --border-hi: rgba(255,255,255,0.18);
+    --text: #e2e8f0; --text-muted: #8892a4; --text-dim: #5a6478;
+    --blue: #3b82f6; --blue-dim: rgba(59,130,246,0.15); --blue-border: rgba(59,130,246,0.35);
+    --teal: #14b8a6; --teal-dim: rgba(20,184,166,0.12); --teal-border: rgba(20,184,166,0.3);
+    --amber: #f59e0b; --amber-dim: rgba(245,158,11,0.12); --amber-border: rgba(245,158,11,0.3);
+    --purple: #a78bfa; --purple-dim: rgba(167,139,250,0.12); --purple-border: rgba(167,139,250,0.3);
+    --red: #f87171; --red-dim: rgba(248,113,113,0.1);
+    --green: #4ade80; --green-dim: rgba(74,222,128,0.1); --green-border: rgba(74,222,128,0.25);
+    --cyan: #22d3ee; --cyan-dim: rgba(34,211,238,0.12); --cyan-border: rgba(34,211,238,0.3);
+    --radius: 10px; --radius-lg: 14px;
+  }
+
+  body { background: var(--bg); color: var(--text); font-family: 'SF Mono','Fira Code','Cascadia Code',ui-monospace,monospace; font-size: 13px; line-height: 1.6; min-height: 100vh; padding: 32px 24px 48px; }
+
+  .page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; gap: 16px; flex-wrap: wrap; }
+  .page-title { font-size: 18px; font-weight: 600; color: var(--text); letter-spacing: -0.3px; }
+  .page-subtitle { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+  .scope-banner { background: var(--amber-dim); border: 1px solid var(--amber-border); border-radius: var(--radius); padding: 9px 14px; font-size: 11px; color: #fcd34d; margin-bottom: 20px; display: flex; align-items: flex-start; gap: 8px; line-height: 1.6; }
+  .scope-banner strong { color: #fde68a; }
+
+  .legend { display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px; padding: 10px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-muted); }
+  .legend-swatch { width: 12px; height: 12px; border-radius: 3px; border: 1px solid; flex-shrink: 0; }
+
+  .hint { font-size: 11px; color: var(--text-dim); text-align: center; margin-bottom: 10px; letter-spacing: 0.03em; }
+
+  .node { display: inline-flex; flex-direction: column; align-items: center; cursor: pointer; flex-shrink: 0; transition: transform 0.15s; }
+  .node:hover { transform: translateY(-2px); }
+  .node:hover .nb { border-color: var(--border-hi); }
+  .nb { border-radius: var(--radius); border: 1px solid var(--border); background: var(--bg3); padding: 8px 14px; text-align: center; transition: border-color 0.2s, box-shadow 0.2s; white-space: nowrap; }
+  .nb.active { border-color: var(--blue-border); box-shadow: 0 0 0 3px var(--blue-dim); animation: pulse 0.4s ease-out; }
+  .nb.oval { border-radius: 999px; padding: 8px 18px; }
+  .nb.pill { border-radius: 24px; padding: 10px 20px; }
+  .nl { font-size: 12px; font-weight: 600; white-space: nowrap; }
+  .ns { font-size: 10px; color: var(--text-muted); margin-top: 2px; white-space: nowrap; }
+
+  .nb.c-blue { background: var(--blue-dim); border-color: var(--blue-border); } .nb.c-blue .nl { color: #93c5fd; }
+  .nb.c-teal { background: var(--teal-dim); border-color: var(--teal-border); } .nb.c-teal .nl { color: #5eead4; }
+  .nb.c-amber { background: var(--amber-dim); border-color: var(--amber-border); } .nb.c-amber .nl { color: #fcd34d; }
+  .nb.c-purple { background: var(--purple-dim); border-color: var(--purple-border); } .nb.c-purple .nl { color: #c4b5fd; }
+  .nb.c-green { background: var(--green-dim); border-color: var(--green-border); } .nb.c-green .nl { color: var(--green); }
+  .nb.c-cyan { background: var(--cyan-dim); border-color: var(--cyan-border); } .nb.c-cyan .nl { color: var(--cyan); }
+
+  @keyframes pulse { 0% { box-shadow: 0 0 0 0 var(--blue-dim); } 70% { box-shadow: 0 0 0 8px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
+
+  .ha { display: flex; align-items: center; min-width: 32px; flex: 0 0 auto; }
+  .ha-line { height: 1px; background: var(--border-hi); flex: 1; min-width: 20px; position: relative; }
+  .ha-head { width: 0; height: 0; border: 5px solid transparent; border-left-color: var(--border-hi); flex-shrink: 0; }
+  .ha-label { position: absolute; top: -16px; left: 50%; transform: translateX(-50%); font-size: 10px; color: var(--text-dim); white-space: nowrap; background: var(--bg2); padding: 0 4px; }
+
+  .va { display: flex; flex-direction: column; align-items: center; }
+  .va-line { width: 1px; background: var(--border-hi); min-height: 24px; position: relative; }
+  .va-head { width: 0; height: 0; border: 5px solid transparent; border-top-color: var(--border-hi); }
+  .va-label { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 10px; color: var(--text-dim); white-space: nowrap; background: var(--bg2); padding: 0 4px; }
+
+  .topo { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 28px 24px 24px; margin-bottom: 20px; overflow-x: auto; }
+  .topo-inner { min-width: 800px; }
+
+  .zone { border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px 20px 20px; position: relative; }
+  .zone-lbl { position: absolute; top: -10px; left: 16px; background: var(--bg2); padding: 0 8px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+
+  .pod-box { border: 1px dashed var(--border-hi); border-radius: var(--radius); padding: 14px 16px; position: relative; background: rgba(255,255,255,0.015); }
+  .pod-lbl { position: absolute; top: -9px; left: 12px; background: var(--bg2); padding: 0 6px; font-size: 9px; color: var(--text-dim); letter-spacing: 0.04em; }
+
+  .row { display: flex; align-items: center; }
+  .row-c { display: flex; align-items: center; justify-content: center; }
+  .col { display: flex; flex-direction: column; align-items: center; }
+  .gap-8 { gap: 8px; } .gap-12 { gap: 12px; } .gap-16 { gap: 16px; } .gap-20 { gap: 20px; }
+
+  .detail-panel { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px 24px; margin-bottom: 20px; min-height: 130px; }
+  .detail-panel h3 { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .detail-panel h3 .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .detail-content { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; }
+  .detail-card { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; }
+  .detail-card-title { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 6px; }
+  .detail-card-body { font-size: 12px; color: var(--text-muted); line-height: 1.7; }
+  .detail-card-body code { color: var(--amber); font-size: 11px; background: rgba(245,158,11,0.08); padding: 1px 4px; border-radius: 3px; }
+  .detail-card-body .warn { color: var(--red); } .detail-card-body .ok { color: var(--green); }
+
+  .ref-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
+  .ref-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px 18px; }
+  .ref-card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-dim); margin-bottom: 10px; }
+  .ref-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 5px 0; border-bottom: 1px solid var(--border); gap: 8px; }
+  .ref-item:last-child { border-bottom: none; }
+  .ref-item-label { color: var(--text-muted); font-size: 11px; flex-shrink: 0; }
+  .ref-item-val { color: var(--text); font-size: 11px; text-align: right; }
+  .ref-item-val code { color: var(--amber); font-size: 10px; }
+
+  .kcs-bar { background: var(--blue-dim); border: 1px solid var(--blue-border); border-radius: var(--radius); padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 11px; color: #93c5fd; }
+</style>
+</head>
+<body>
+
+<a href="../index.html" style="display:inline-block;margin-bottom:12px;font-size:12px;color:var(--text-muted);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'">&larr; All Diagrams</a>
+
+<div class="page-header"><div>
+  <div class="page-title">ARO HCP via ASO — Deployment Architecture</div>
+  <div class="page-subtitle">Deploying ARO HCP with Swift using Azure Service Operator (ASO) from a local Kind cluster.</div>
+</div></div>
+
+<div class="scope-banner"><span>⚠</span><span><strong>ASO-based deployment.</strong> Azure Service Operator runs in a local Kind cluster alongside CAPI/CAPZ controllers. It manages all Azure resources (VNet, Key Vault, Managed Identities, Role Assignments) as Kubernetes CRDs, then creates the ARO HCP cluster resource declaratively. Requires <code>networkType: Other</code> with manual Cilium CNI installation.</span></div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--purple-dim);border-color:var(--purple-border)"></div> Kind Cluster / Controllers</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--blue-dim);border-color:var(--blue-border)"></div> ASO CRDs / Azure Resources</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--cyan-dim);border-color:var(--cyan-border)"></div> Networking</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--amber-dim);border-color:var(--amber-border)"></div> Key Vault / Encryption</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--teal-dim);border-color:var(--teal-border)"></div> Identity / RBAC</div>
+  <div class="legend-item"><div class="legend-swatch" style="background:var(--green-dim);border-color:var(--green-border)"></div> ARO HCP Cluster / Nodes</div>
+</div>
+
+<p class="hint">Click any component to see details</p>
+
+<!-- ════════════════ TOPOLOGY ════════════════ -->
+<div class="topo">
+<div class="topo-inner">
+
+  <!-- ═══ KIND CLUSTER (Local) ═══ -->
+  <div class="zone" style="border-color:var(--purple-border); margin-bottom:0;">
+    <div class="zone-lbl" style="color:#c4b5fd;">Kind Cluster (Local)</div>
+    <div class="row-c gap-16" style="flex-wrap:wrap;">
+      <div class="node" onclick="selectNode('capi')">
+        <div class="nb c-purple" id="box-capi"><div class="nl">CAPI Controller</div><div class="ns">capi-system</div></div>
+      </div>
+      <div class="node" onclick="selectNode('capz')">
+        <div class="nb c-purple" id="box-capz"><div class="nl">CAPZ Controller</div><div class="ns">capz-system</div></div>
+      </div>
+      <div class="node" onclick="selectNode('aso')">
+        <div class="nb c-purple" id="box-aso"><div class="nl">ASO Controller</div><div class="ns">capz-system &middot; v2.13.0</div></div>
+      </div>
+      <div class="node" onclick="selectNode('aso-cred')">
+        <div class="nb c-purple" id="box-aso-cred" style="padding:6px 12px;"><div class="nl">ASO Credential Secret</div><div class="ns">SP: Contributor + User Access Admin</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arrow: Kind → Azure -->
+  <div class="col" style="margin:0 auto;">
+    <div class="va"><div class="va-line" style="min-height:20px;"><span class="va-label">ARM API (CRD reconciliation)</span></div><div class="va-head"></div></div>
+  </div>
+
+  <!-- ═══ AZURE SUBSCRIPTION ═══ -->
+  <div class="zone" style="border-color:var(--blue-border);">
+    <div class="zone-lbl" style="color:#93c5fd;">Azure Subscription</div>
+
+    <!-- Resource Group → contains everything -->
+    <div class="col gap-16" style="align-items:center;">
+
+      <!-- Resource Group label -->
+      <div class="node" onclick="selectNode('rg')">
+        <div class="nb c-blue" id="box-rg"><div class="nl">Resource Group</div><div class="ns">${USER}-${CS_CLUSTER_NAME}-rg</div></div>
+      </div>
+
+      <!-- Two columns: Networking | Key Vault + Identities -->
+      <div class="row-c gap-20" style="align-items:flex-start; flex-wrap:wrap;">
+
+        <!-- Left: Networking -->
+        <div class="col gap-12" style="flex-shrink:0;">
+          <div class="pod-box" style="border-color:var(--cyan-border);">
+            <div class="pod-lbl" style="color:var(--cyan);">VNet (10.0.0.0/16)</div>
+            <div class="col gap-8">
+              <div class="node" onclick="selectNode('customer-subnet')">
+                <div class="nb c-cyan" id="box-customer-subnet"><div class="nl">Customer Subnet</div><div class="ns">10.0.0.0/24 &middot; nodes + PE</div></div>
+              </div>
+              <div class="node" onclick="selectNode('integration-subnet')">
+                <div class="nb c-teal" id="box-integration-subnet"><div class="nl">VNet Integration Subnet</div><div class="ns">10.0.1.0/24 &middot; delegated (Swift)</div></div>
+              </div>
+              <div class="node" onclick="selectNode('nsg')">
+                <div class="nb c-cyan" id="box-nsg" style="padding:6px 12px;"><div class="nl">NSG</div><div class="ns">${CS_CLUSTER_NAME}-nsg</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="pod-box" style="border-color:var(--purple-border);">
+            <div class="pod-lbl" style="color:#c4b5fd;">Private Networking</div>
+            <div class="col gap-8">
+              <div class="node" onclick="selectNode('private-endpoint')">
+                <div class="nb c-purple" id="box-private-endpoint"><div class="nl">Private Endpoint</div><div class="ns">KV &rarr; Customer Subnet</div></div>
+              </div>
+              <div class="node" onclick="selectNode('private-dns')">
+                <div class="nb c-purple" id="box-private-dns"><div class="nl">Private DNS Zone</div><div class="ns">privatelink.vaultcore.azure.net</div></div>
+              </div>
+              <div class="node" onclick="selectNode('dns-vnet-link')">
+                <div class="nb c-purple" id="box-dns-vnet-link"><div class="nl">DNS Zone VNet Link</div><div class="ns">links zone to customer VNet</div></div>
+              </div>
+              <div class="node" onclick="selectNode('dns-zone-group')">
+                <div class="nb c-purple" id="box-dns-zone-group"><div class="nl">DNS Zone Group</div><div class="ns">auto-registers KV A record</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Middle: Key Vault -->
+        <div class="col gap-12" style="flex-shrink:0;">
+          <div class="node" onclick="selectNode('keyvault')">
+            <div class="nb c-amber" id="box-keyvault"><div class="nl">Key Vault</div><div class="ns">publicNetworkAccess: Disabled</div><div class="ns">RBAC auth &middot; soft delete off</div></div>
+          </div>
+          <div class="va"><div class="va-line" style="min-height:8px;"></div><div class="va-head"></div></div>
+          <div class="node" onclick="selectNode('etcd-key')">
+            <div class="nb c-amber" id="box-etcd-key"><div class="nl">etcd-data-kms-encryption-key</div><div class="ns">RSA 2048 &middot; KMS Private</div></div>
+          </div>
+        </div>
+
+        <!-- Right: Cluster -->
+        <div class="col gap-12" style="flex-shrink:0;">
+          <div class="node" onclick="selectNode('hcp-cluster')">
+            <div class="nb c-green" id="box-hcp-cluster"><div class="nl">HcpOpenShiftCluster</div><div class="ns">v1api20251223preview</div><div class="ns">OCP 4.20 &middot; networkType: Other</div></div>
+          </div>
+          <div class="va"><div class="va-line" style="min-height:12px;"><span class="va-label">owner</span></div><div class="va-head"></div></div>
+          <div class="node" onclick="selectNode('nodepool')">
+            <div class="nb c-green" id="box-nodepool"><div class="nl">NodePool</div><div class="ns">D8s_v3 &middot; 2-10 autoscale</div><div class="ns">ephemeral OS &middot; auto-repair</div></div>
+          </div>
+          <div class="va"><div class="va-line" style="min-height:12px;"><span class="va-label">requires</span></div><div class="va-head"></div></div>
+          <div class="node" onclick="selectNode('cilium')">
+            <div class="nb c-green oval" id="box-cilium"><div class="nl">Cilium CNI</div><div class="ns">VXLAN &middot; kube-proxy replacement</div></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- Detail panel -->
+<div class="detail-panel" id="detail-panel">
+  <div id="detail-hint" style="font-size:12px;color:var(--text-muted);">&larr; Select a component above or below to see details.</div>
+  <div class="detail-content" id="detail-content" style="display:none;"></div>
+</div>
+
+<!-- ════════════════ DEPLOYMENT WORKFLOW ════════════════ -->
+<div class="topo">
+<div class="topo-inner" style="min-width:700px;">
+  <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:16px;">Deployment Workflow</div>
+  <div class="row-c gap-8" style="flex-wrap:wrap;">
+    <div class="node" onclick="selectNode('step-kind')">
+      <div class="nb c-purple" id="box-step-kind"><div class="nl">1. Deploy Kind</div><div class="ns">CAPI + CAPZ + ASO</div></div>
+    </div>
+    <div class="ha" style="width:32px;"><div class="ha-line"></div><div class="ha-head"></div></div>
+    <div class="node" onclick="selectNode('step-creds')">
+      <div class="nb c-purple" id="box-step-creds"><div class="nl">2. ASO Credentials</div><div class="ns">SP secret</div></div>
+    </div>
+    <div class="ha" style="width:32px;"><div class="ha-line"></div><div class="ha-head"></div></div>
+    <div class="node" onclick="selectNode('step-infra')">
+      <div class="nb c-blue" id="box-step-infra"><div class="nl">3. Apply 1-infra.yaml</div><div class="ns">VNet, KV, MIs, roles</div></div>
+    </div>
+    <div class="ha" style="width:32px;"><div class="ha-line"></div><div class="ha-head"></div></div>
+    <div class="node" onclick="selectNode('step-key')">
+      <div class="nb c-amber" id="box-step-key"><div class="nl">4. Create etcd key</div><div class="ns">az keyvault key create</div></div>
+    </div>
+    <div class="ha" style="width:32px;"><div class="ha-line"></div><div class="ha-head"></div></div>
+    <div class="node" onclick="selectNode('step-cluster')">
+      <div class="nb c-green" id="box-step-cluster"><div class="nl">5. Apply 2-cluster</div><div class="ns">HCP + NodePool</div></div>
+    </div>
+    <div class="ha" style="width:32px;"><div class="ha-line"></div><div class="ha-head"></div></div>
+    <div class="node" onclick="selectNode('step-cilium')">
+      <div class="nb c-green" id="box-step-cilium"><div class="nl">6. Install Cilium</div><div class="ns">helm install</div></div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ════════════════ IDENTITIES ════════════════ -->
+<div class="topo">
+<div class="topo-inner" style="min-width:700px;">
+  <div style="font-size:11px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.04em;margin-bottom:16px;">Managed Identities &amp; Role Assignments (13 total)</div>
+
+  <div class="zone" style="border-color:var(--teal-border); margin-bottom:16px;">
+    <div class="zone-lbl" style="color:#5eead4;">Control Plane Identities (9)</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+      <div class="node" onclick="selectNode('mi-cluster-api')"><div class="nb c-teal" id="box-mi-cluster-api"><div class="nl">cluster-api-azure</div><div class="ns">HCP Cluster API Provider</div><div class="ns">Scope: Subnet + VNet</div></div></div>
+      <div class="node" onclick="selectNode('mi-control-plane')"><div class="nb c-teal" id="box-mi-control-plane"><div class="nl">control-plane</div><div class="ns">HCP CP Operator</div><div class="ns">Scope: VNet + NSG</div></div></div>
+      <div class="node" onclick="selectNode('mi-kms')"><div class="nb c-amber" id="box-mi-kms"><div class="nl">kms</div><div class="ns">Key Vault Crypto User</div><div class="ns">Scope: Key Vault</div></div></div>
+      <div class="node" onclick="selectNode('mi-ccm')"><div class="nb c-teal" id="box-mi-ccm"><div class="nl">cloud-controller-mgr</div><div class="ns">Cloud Controller Mgr</div><div class="ns">Scope: Subnet + NSG</div></div></div>
+      <div class="node" onclick="selectNode('mi-ingress')"><div class="nb c-teal" id="box-mi-ingress"><div class="nl">ingress</div><div class="ns">HCP Ingress Operator</div><div class="ns">Scope: Subnet</div></div></div>
+      <div class="node" onclick="selectNode('mi-disk-csi')"><div class="nb c-teal" id="box-mi-disk-csi"><div class="nl">disk-csi-driver</div><div class="ns">Reader</div><div class="ns">Scope: Resource Group</div></div></div>
+      <div class="node" onclick="selectNode('mi-file-csi')"><div class="nb c-teal" id="box-mi-file-csi"><div class="nl">file-csi-driver</div><div class="ns">HCP File Storage Op</div><div class="ns">Scope: Subnet + NSG</div></div></div>
+      <div class="node" onclick="selectNode('mi-image-registry')"><div class="nb c-teal" id="box-mi-image-registry"><div class="nl">image-registry</div><div class="ns">Reader</div><div class="ns">Scope: Resource Group</div></div></div>
+      <div class="node" onclick="selectNode('mi-network')"><div class="nb c-teal" id="box-mi-network"><div class="nl">cloud-network-config</div><div class="ns">HCP Network Operator</div><div class="ns">Scope: Subnet + VNet</div></div></div>
+    </div>
+  </div>
+
+  <div class="row-c gap-16" style="flex-wrap:wrap;">
+    <div class="zone" style="border-color:var(--teal-border); flex:1; min-width:200px;">
+      <div class="zone-lbl" style="color:#5eead4;">Service Identity (1)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+        <div class="node" onclick="selectNode('mi-service')"><div class="nb c-teal" id="box-mi-service"><div class="nl">service</div><div class="ns">HCP Service MI + Network Contributor</div><div class="ns">Scope: VNet + NSG + Reader on all MIs</div></div></div>
+      </div>
+    </div>
+    <div class="zone" style="border-color:var(--green-border); flex:1; min-width:200px;">
+      <div class="zone-lbl" style="color:var(--green);">Dataplane Identities (3 &middot; OIDC)</div>
+      <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+        <div class="node" onclick="selectNode('mi-dp-disk')"><div class="nb c-green" id="box-mi-dp-disk"><div class="nl">disk-csi-driver</div><div class="ns">Federated &rarr; CP MI</div></div></div>
+        <div class="node" onclick="selectNode('mi-dp-file')"><div class="nb c-green" id="box-mi-dp-file"><div class="nl">file-csi-driver</div><div class="ns">Federated &rarr; CP MI</div></div></div>
+        <div class="node" onclick="selectNode('mi-dp-registry')"><div class="nb c-green" id="box-mi-dp-registry"><div class="nl">image-registry</div><div class="ns">Federated &rarr; CP MI</div></div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- Reference cards -->
+<div class="ref-grid">
+  <div class="ref-card">
+    <div class="ref-card-title">ASO CRD Groups</div>
+    <div class="ref-item"><span class="ref-item-label">resources</span><span class="ref-item-val"><code>ResourceGroup</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">network</span><span class="ref-item-val"><code>VNet, Subnet, NSG, PE, DNS</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">keyvault</span><span class="ref-item-val"><code>Vault</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">managedidentity</span><span class="ref-item-val"><code>UserAssignedIdentity</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">authorization</span><span class="ref-item-val"><code>RoleAssignment</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">redhatopenshift</span><span class="ref-item-val"><code>HcpOpenShiftCluster</code></span></div>
+  </div>
+  <div class="ref-card">
+    <div class="ref-card-title">Network CIDRs</div>
+    <div class="ref-item"><span class="ref-item-label">VNet</span><span class="ref-item-val"><code>10.0.0.0/16</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Customer Subnet</span><span class="ref-item-val"><code>10.0.0.0/24</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Integration</span><span class="ref-item-val"><code>10.0.1.0/24</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Pod CIDR</span><span class="ref-item-val"><code>10.128.0.0/14</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Service CIDR</span><span class="ref-item-val"><code>172.30.0.0/16</code></span></div>
+  </div>
+  <div class="ref-card">
+    <div class="ref-card-title">Prerequisites</div>
+    <div class="ref-item"><span class="ref-item-label">SP roles</span><span class="ref-item-val">Contributor + User Access Admin</span></div>
+    <div class="ref-item"><span class="ref-item-label">ASO version</span><span class="ref-item-val"><code>v2.13.0-hcpclusters.9</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Cluster API</span><span class="ref-item-val"><code>v1api20251223preview</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">CNI</span><span class="ref-item-val">Cilium (manual install)</span></div>
+  </div>
+  <div class="ref-card">
+    <div class="ref-card-title">Key Commands</div>
+    <div class="ref-item"><span class="ref-item-label">Deploy infra</span><span class="ref-item-val"><code>envsubst &lt; 1-infra.yaml | kubectl apply -f -</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Deploy cluster</span><span class="ref-item-val"><code>envsubst &lt; 2-cluster-swift.yaml | kubectl apply -f -</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Watch status</span><span class="ref-item-val"><code>kubectl get hcpopenshiftclusters -w</code></span></div>
+    <div class="ref-item"><span class="ref-item-label">Get kubeconfig</span><span class="ref-item-val"><code>az rest --method POST ...requestAdminCredential</code></span></div>
+  </div>
+</div>
+
+<div class="kcs-bar"><span>📄 Source: ASO CRD manifests — 1-infra.yaml + 2-cluster-swift.yaml + credentials.yaml</span></div>
+
+<script>
+var nodeData = {
+  capi: { color: '#a78bfa', title: 'CAPI Controller Manager', cards: [
+    { title: 'Role', body: 'Cluster API core controller. Manages the lifecycle of Kubernetes clusters as declarative resources. Runs in <code>capi-system</code> namespace.' },
+    { title: 'In this setup', body: 'Provides the base cluster management framework. CAPZ and ASO extend it with Azure-specific functionality.' },
+    { title: 'Deployment', body: 'Deployed via <code>deploy-operator.sh cluster-api-provider-azure</code> script into a local Kind cluster.' },
+    { title: 'Relationship', body: 'Works with CAPZ (Azure provider) and ASO (Azure resource management). Together they form the control loop: CAPI defines what → CAPZ/ASO creates it in Azure.' },
+  ]},
+  capz: { color: '#a78bfa', title: 'CAPZ Controller Manager', cards: [
+    { title: 'Role', body: 'Cluster API Provider for Azure. Extends CAPI with Azure-specific machine types, networking, and identity management. Runs in <code>capz-system</code> namespace.' },
+    { title: 'Replicas', body: 'Runs with 2 replicas for high availability in the Kind cluster.' },
+    { title: 'Relationship', body: 'CAPZ manages the Azure Machine, AzureCluster, and AzureMachineTemplate resources. ASO handles the lower-level Azure resource creation.' },
+    { title: 'ASO integration', body: 'ASO controller runs alongside CAPZ in the <code>capz-system</code> namespace, sharing the same Azure credentials.' },
+  ]},
+  aso: { color: '#a78bfa', title: 'ASO Controller Manager', cards: [
+    { title: 'Role', body: 'Azure Service Operator controller. Watches for ASO CRDs in the cluster and reconciles them against Azure ARM API. Version: <code>v2.13.0-hcpclusters.9</code>.' },
+    { title: 'How it works', body: '1. User applies YAML (e.g. VirtualNetwork CRD)<br>2. ASO controller detects new resource<br>3. Calls Azure ARM API to create/update<br>4. Monitors provisioning status<br>5. Updates CRD <code>.status.conditions</code> with result' },
+    { title: 'Namespace', body: 'Runs in <code>capz-system</code>. Watches resources in <code>default</code> namespace (where infrastructure CRDs are applied).' },
+    { title: 'Credential', body: 'Reads Azure credentials from the <code>aso-credential</code> Secret in the <code>default</code> namespace. Requires Service Principal with Contributor + User Access Administrator roles.' },
+  ]},
+  'aso-cred': { color: '#a78bfa', title: 'ASO Credential Secret', cards: [
+    { title: 'Contents', body: 'Kubernetes Secret containing:<br>• <code>AZURE_SUBSCRIPTION_ID</code><br>• <code>AZURE_TENANT_ID</code><br>• <code>AZURE_CLIENT_ID</code><br>• <code>AZURE_CLIENT_SECRET</code>' },
+    { title: 'Service Principal', body: 'Created via <code>az ad sp create-for-rbac</code>. Requires two subscription-level roles:<br>• <strong>Contributor</strong> (create Azure resources)<br>• <strong>User Access Administrator</strong> (create RoleAssignments)' },
+    { title: 'Scope', body: 'Applied in the <code>default</code> namespace. ASO controller in <code>capz-system</code> reads it via cross-namespace reference.' },
+    { title: 'Security', body: '<span class="warn">Contains full Azure credentials.</span> The SP has broad permissions. In production, consider managed identity or workload identity instead.' },
+  ]},
+  rg: { color: '#3b82f6', title: 'Resource Group', cards: [
+    { title: 'Purpose', body: 'Container for all Azure resources created by ASO. Named <code>${USER}-${CS_CLUSTER_NAME}-rg</code>.' },
+    { title: 'ASO CRD', body: '<code>resources.azure.com/ResourceGroup</code> (API: <code>v1api20200601</code>). All other resources reference this as <code>owner</code>.' },
+    { title: 'Contents', body: 'VNet, Subnets, NSG, Key Vault, Private Endpoint, Private DNS Zone, 13 Managed Identities, ~30 Role Assignments, and the HcpOpenShiftCluster resource.' },
+    { title: 'Managed RG', body: 'ARO HCP also creates a separate <strong>managed resource group</strong> (<code>${RG}-managed</code>) for infrastructure it controls directly.' },
+  ]},
+  'customer-subnet': { color: '#22d3ee', title: 'Customer Subnet', cards: [
+    { title: 'Purpose', body: 'Hosts worker node VMs and the Key Vault private endpoint. Address: <code>10.0.0.0/24</code>.' },
+    { title: 'ASO CRD', body: '<code>network.azure.com/VirtualNetworksSubnet</code>. Owner: VNet. NSG attached.' },
+    { title: 'Resources in subnet', body: '• Worker node VMs (Standard_D8s_v3)<br>• Private Endpoint for Key Vault<br>• Load Balancer (outbound type)' },
+    { title: 'Role assignments', body: 'Multiple MIs have roles scoped to this subnet: cluster-api-azure, CCM, ingress, file-csi, cloud-network-config.' },
+  ]},
+  'integration-subnet': { color: '#14b8a6', title: 'VNet Integration Subnet', cards: [
+    { title: 'Purpose', body: '<strong>Swift enabler.</strong> Delegated to <code>Microsoft.RedHatOpenShift/hcpOpenShiftClusters</code>. ARO HCP injects a NIC here for private Key Vault access.' },
+    { title: 'Configuration', body: 'Address: <code>10.0.1.0/24</code>. <span class="warn">No NSG applied.</span> Minimum /24 required. Dedicated — no other resources allowed.' },
+    { title: 'ASO CRD', body: '<code>network.azure.com/VirtualNetworksSubnet</code> with <code>delegations</code> array specifying the ARO HCP service delegation.' },
+    { title: 'Cluster reference', body: 'Referenced in the HcpOpenShiftCluster CRD via <code>platform.vnetIntegrationSubnetId</code>.' },
+  ]},
+  nsg: { color: '#22d3ee', title: 'Network Security Group', cards: [
+    { title: 'Purpose', body: 'Controls traffic for the customer subnet. Name: <code>${CS_CLUSTER_NAME}-nsg</code>.' },
+    { title: 'Applied to', body: 'Customer subnet only. <span class="warn">Not applied to VNet Integration Subnet.</span>' },
+    { title: 'RBAC', body: 'Multiple MIs have roles on the NSG: control-plane (HCP CP Operator), CCM, file-csi, and service MI (Network Contributor).' },
+    { title: 'ASO CRD', body: '<code>network.azure.com/NetworkSecurityGroup</code> (API: <code>v1api20201101</code>). No explicit rules in template — managed by ARO service.' },
+  ]},
+  'private-endpoint': { color: '#a78bfa', title: 'Private Endpoint', cards: [
+    { title: 'Purpose', body: 'Creates a private IP for Key Vault in the customer subnet. Allows control plane to reach KV without public internet.' },
+    { title: 'ASO CRD', body: '<code>network.azure.com/PrivateEndpoint</code> (API: <code>v1api20220701</code>). Group: <code>vault</code>. Connected to Key Vault via Private Link.' },
+    { title: 'DNS integration', body: 'A <code>PrivateEndpointsPrivateDnsZoneGroup</code> CRD auto-registers the private endpoint IP as an A record in the Private DNS Zone.' },
+    { title: 'Traffic flow', body: 'Injected NIC (10.0.1.x) → DNS resolves to PE IP (10.0.0.x) → Private Link → Key Vault. <span class="ok">All on Azure backbone.</span>' },
+  ]},
+  'private-dns': { color: '#a78bfa', title: 'Private DNS Zone', cards: [
+    { title: 'Purpose', body: 'Zone: <code>privatelink.vaultcore.azure.net</code>. Resolves KV FQDN to private endpoint IP instead of public IP.' },
+    { title: 'VNet Link', body: '<code>PrivateDnsZonesVirtualNetworkLink</code> CRD links the zone to the customer VNet. Registration disabled — only the DNS Zone Group auto-registers.' },
+    { title: 'ASO CRDs', body: 'Three related CRDs: <code>PrivateDnsZone</code>, <code>PrivateDnsZonesVirtualNetworkLink</code>, <code>PrivateEndpointsPrivateDnsZoneGroup</code>.' },
+    { title: 'Security', body: '<span class="ok">Prevents DNS hijacking.</span> Control plane always resolves KV to the private IP, never the public endpoint.' },
+  ]},
+  'dns-vnet-link': { color: '#a78bfa', title: 'Private DNS Zone VNet Link', cards: [
+    { title: 'Purpose', body: 'Links the Private DNS Zone (<code>privatelink.vaultcore.azure.net</code>) to the customer VNet, making private DNS resolution available to all resources in the VNet.' },
+    { title: 'ASO CRD', body: '<code>network.azure.com/PrivateDnsZonesVirtualNetworkLink</code> (API: <code>v1api20200601</code>). Owner: Private DNS Zone.' },
+    { title: 'Configuration', body: 'Registration enabled: <code>false</code> (only the DNS Zone Group auto-registers records, not the VNet link). Location: global.' },
+    { title: 'Effect', body: 'Without this link, the Private DNS Zone would not be visible inside the VNet. The injected NIC and worker nodes would resolve Key Vault to its public IP instead of the private endpoint IP.' },
+  ]},
+  'dns-zone-group': { color: '#a78bfa', title: 'Private Endpoints DNS Zone Group', cards: [
+    { title: 'Purpose', body: 'Automatically registers the Private Endpoint\'s IP address as an A record in the Private DNS Zone. No manual DNS configuration needed.' },
+    { title: 'ASO CRD', body: '<code>network.azure.com/PrivateEndpointsPrivateDnsZoneGroup</code> (API: <code>v1api20220701</code>). Owner: Private Endpoint.' },
+    { title: 'How it works', body: 'When the Private Endpoint gets an IP (e.g. 10.0.0.4), this group creates an A record: <code>{vault-name}.vault.azure.net → 10.0.0.4</code> in the Private DNS Zone.' },
+    { title: 'Dependencies', body: 'Depends on: Private Endpoint (parent), Private DNS Zone (target), and DNS Zone VNet Link (must exist first so the zone is linked to the VNet).' },
+  ]},
+  keyvault: { color: '#f59e0b', title: 'Key Vault', cards: [
+    { title: 'Purpose', body: 'Stores the etcd encryption key. <code>publicNetworkAccess: Disabled</code> — fully private.' },
+    { title: 'ASO CRD', body: '<code>keyvault.azure.com/Vault</code> (API: <code>v1api20230701</code>). RBAC authorization enabled. Soft delete disabled.' },
+    { title: 'Key creation', body: '<span class="warn">The etcd key is NOT created via ASO</span> — it requires <code>az keyvault key create</code> CLI. KV public access is temporarily enabled for key creation, then disabled.' },
+    { title: 'Access', body: 'KMS MI has Key Vault Crypto User role. Accessed via private endpoint + private DNS. Zero public attack surface.' },
+  ]},
+  'etcd-key': { color: '#f59e0b', title: 'etcd Encryption Key', cards: [
+    { title: 'Purpose', body: 'RSA 2048-bit key for encrypting etcd data at rest. Name: <code>etcd-data-kms-encryption-key</code>.' },
+    { title: 'KMS visibility', body: 'Cluster CRD sets <code>kms.visibility: Private</code>, telling the control plane to access this key via the private endpoint path.' },
+    { title: 'Key version', body: 'Extracted via <code>az keyvault key show ... --query key.kid</code> and passed to the cluster CRD as <code>activeKey.version</code>.' },
+    { title: 'Creation workflow', body: '1. Temporarily enable KV public access<br>2. Grant yourself Key Vault Administrator<br>3. <code>az keyvault key create</code><br>4. Disable KV public access again' },
+  ]},
+  'hcp-cluster': { color: '#4ade80', title: 'HcpOpenShiftCluster', cards: [
+    { title: 'Purpose', body: 'The ARO HCP cluster resource. ASO CRD: <code>redhatopenshift.azure.com/HcpOpenShiftCluster</code> (API: <code>v1api20251223preview</code>).' },
+    { title: 'Configuration', body: 'OCP version 4.20. <code>networkType: Other</code> (requires manual Cilium). API visibility: Public. Outbound: LoadBalancer.' },
+    { title: 'Swift settings', body: '<code>platform.vnetIntegrationSubnetId</code> references the delegated subnet. <code>etcd.dataEncryption.customerManaged.kms.visibility: Private</code>.' },
+    { title: 'Identity', body: 'References all 10 control plane managed identities (9 CP + 1 service) as user-assigned identities in the <code>identity</code> section.' },
+  ]},
+  nodepool: { color: '#4ade80', title: 'NodePool', cards: [
+    { title: 'Purpose', body: 'Worker nodes for the ARO HCP cluster. ASO CRD: <code>HcpOpenShiftClustersNodePool</code>.' },
+    { title: 'Configuration', body: 'VM: <code>Standard_D8s_v3</code>. OS disk: 64GB ephemeral (<code>StandardSSD_LRS</code>). Auto-scaling: 2-10 nodes. Auto-repair: enabled.' },
+    { title: 'Subnet', body: 'Deployed in the customer subnet (10.0.0.0/24). Uses the subnet specified in the parent cluster\'s platform config.' },
+    { title: 'Version', body: 'OCP version 4.20.16. Must match or be compatible with the cluster version (4.20).' },
+  ]},
+  cilium: { color: '#4ade80', title: 'Cilium CNI', cards: [
+    { title: 'Why needed', body: '<code>networkType: Other</code> means ARO HCP does NOT pre-install a CNI. Cilium must be installed manually after cluster creation.' },
+    { title: 'Configuration', body: 'Tunnel mode: VXLAN. Kube-proxy replacement: enabled (eBPF). IPAM: cluster-pool. Pod CIDR: <code>10.128.0.0/14</code>. Mask size: /23.' },
+    { title: 'Installation', body: '<code>helm install cilium cilium/cilium --namespace kube-system</code> with specific flags for VXLAN, kube-proxy replacement, and cluster-pool IPAM.' },
+    { title: 'Prerequisites', body: 'Before installing Cilium: <code>kubectl patch networks.operator.openshift.io cluster --patch \'{"spec":{"deployKubeProxy":false}}\'</code>' },
+  ]},
+  'step-kind': { color: '#a78bfa', title: 'Step 1: Deploy Kind Cluster', cards: [
+    { title: 'What', body: 'Create a local Kind cluster and deploy CAPI, CAPZ, and ASO controllers into it.' },
+    { title: 'Command', body: '<code>USE_KIND=true KIND_CLUSTER_NAME=aso-test /opt/homebrew/bin/bash ./scripts/deploy-operator.sh cluster-api-provider-azure</code>' },
+    { title: 'Result', body: 'Kind cluster running with:<br>• capi-controller-manager (capi-system)<br>• capz-controller-manager x2 (capz-system)<br>• azureserviceoperator-controller-manager (capz-system)' },
+    { title: 'Duration', body: 'Typically 2-3 minutes for Kind + operator deployment.' },
+  ]},
+  'step-creds': { color: '#a78bfa', title: 'Step 2: ASO Credentials', cards: [
+    { title: 'What', body: 'Create an Azure Service Principal and store credentials as a Kubernetes Secret for ASO.' },
+    { title: 'Commands', body: '<code>az ad sp create-for-rbac --name "aso-${USER}" --role Contributor</code><br>Then add User Access Administrator role.<br>Then <code>envsubst < credentials.yaml | kubectl apply -f -</code>' },
+    { title: 'Required roles', body: '<strong>Contributor</strong>: create/manage Azure resources<br><strong>User Access Administrator</strong>: create RoleAssignment resources' },
+    { title: 'Secret name', body: '<code>aso-credential</code> in <code>default</code> namespace.' },
+  ]},
+  'step-infra': { color: '#3b82f6', title: 'Step 3: Apply Infrastructure', cards: [
+    { title: 'What', body: 'Apply <code>1-infra.yaml</code> — creates all Azure infrastructure via ASO CRDs.' },
+    { title: 'Creates', body: 'Resource Group, VNet, 2 Subnets, NSG, Key Vault, Private Endpoint, Private DNS Zone, 13 Managed Identities, ~30 Role Assignments.' },
+    { title: 'Command', body: '<code>envsubst < 1-infra.yaml | kubectl apply -f -</code>' },
+    { title: 'Monitor', body: '<code>kubectl get resourcegroups,virtualnetworks,virtualnetworkssubnets,vaults,userassignedidentities -w</code><br>Wait until all show <code>Ready: True</code>.' },
+  ]},
+  'step-key': { color: '#f59e0b', title: 'Step 4: Create etcd Key', cards: [
+    { title: 'What', body: 'Create the RSA 2048-bit encryption key in Key Vault. This step uses Azure CLI, not ASO.' },
+    { title: 'Steps', body: '1. <code>az keyvault update --public-network-access Enabled</code><br>2. Grant yourself Key Vault Administrator<br>3. <code>az keyvault key create --name etcd-data-kms-encryption-key --kty RSA --size 2048</code><br>4. Extract key version<br>5. <code>az keyvault update --public-network-access Disabled</code>' },
+    { title: 'Why not ASO', body: '<span class="warn">ASO does not have a Key Vault Key CRD.</span> The key must be created via CLI. Public access is temporarily enabled then disabled.' },
+    { title: 'Output', body: 'Key version (<code>KV_VERSION</code>) is needed for the cluster CRD\'s <code>activeKey.version</code> field.' },
+  ]},
+  'step-cluster': { color: '#4ade80', title: 'Step 5: Apply Cluster', cards: [
+    { title: 'What', body: 'Apply <code>2-cluster-swift.yaml</code> — creates the HcpOpenShiftCluster and NodePool CRDs.' },
+    { title: 'Command', body: '<code>envsubst < 2-cluster-swift.yaml | kubectl apply -f -</code>' },
+    { title: 'Duration', body: '<span class="warn">25-35 minutes</span> for cluster provisioning. Monitor with <code>kubectl get hcpopenshiftclusters -w</code>.' },
+    { title: 'After ready', body: 'Retrieve kubeconfig via <code>az rest --method POST .../requestAdminCredential</code>. Extract the Location URL and GET the kubeconfig.' },
+  ]},
+  'step-cilium': { color: '#4ade80', title: 'Step 6: Install Cilium', cards: [
+    { title: 'What', body: 'Install Cilium CNI since the cluster uses <code>networkType: Other</code>.' },
+    { title: 'Pre-step', body: '<code>kubectl patch networks.operator.openshift.io cluster --patch \'{"spec":{"deployKubeProxy":false}}\'</code>' },
+    { title: 'Helm install', body: '<code>helm install cilium cilium/cilium --namespace kube-system --set cni.uninstall=false --set kubeProxyReplacement=true --set ipam.mode=cluster-pool --set ipam.operator.clusterPoolIPv4PodCIDRList="10.128.0.0/14" --set routingMode=tunnel --set tunnelProtocol=vxlan</code>' },
+    { title: 'Verify', body: '<code>kubectl get nodes</code> — nodes should become Ready after Cilium pods are running.' },
+  ]},
+  'mi-cluster-api': { color: '#14b8a6', title: 'cluster-api-azure', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-cp-cluster-api-azure-{suffix}</code>.' },
+    { title: 'Role', body: '<strong>HCP Cluster API Provider</strong> (<code>88366f10-ed47-4cc0-9fab-c8a06148393e</code>).' },
+    { title: 'Scope', body: 'Customer Subnet + VNet. Manages worker node NICs and load balancers.' },
+    { title: 'Additional', body: 'Service MI has Reader role on this identity for coordination.' },
+  ]},
+  'mi-control-plane': { color: '#14b8a6', title: 'control-plane', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-cp-control-plane-{suffix}</code>.' },
+    { title: 'Role', body: '<strong>HCP Control Plane Operator</strong> (<code>fc0c873f-45e9-4d0d-a7d1-585aab30c6ed</code>).' },
+    { title: 'Scope', body: 'VNet + NSG. Configures networking and security rules for the hosted cluster.' },
+    { title: 'Purpose', body: 'Routes, security rules, VNet peering for the control plane.' },
+  ]},
+  'mi-kms': { color: '#f59e0b', title: 'kms', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-cp-kms-{suffix}</code>. Dedicated to etcd encryption.' },
+    { title: 'Role', body: '<strong>Key Vault Crypto User</strong> (<code>12338af0-0e69-4776-bea7-57ae8d297424</code>). Encrypt/decrypt/wrap/unwrap only.' },
+    { title: 'Scope', body: 'Key Vault only. Strictest least-privilege of all identities.' },
+    { title: 'Swift path', body: 'Authenticates via injected NIC → private DNS → private endpoint → Key Vault. <span class="ok">All private.</span>' },
+  ]},
+  'mi-ccm': { color: '#14b8a6', title: 'cloud-controller-manager', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-cp-cloud-controller-manager-{suffix}</code>.' },
+    { title: 'Role', body: '<strong>Cloud Controller Manager</strong> (<code>a1f96423-95ce-4224-ab27-4e3dc72facd4</code>).' },
+    { title: 'Scope', body: 'Customer Subnet + NSG. Creates/manages LBs, public IPs, security rules.' },
+    { title: 'Purpose', body: 'Enables Service type LoadBalancer, node lifecycle, route configuration.' },
+  ]},
+  'mi-ingress': { color: '#14b8a6', title: 'ingress', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-cp-ingress-{suffix}</code>.' },
+    { title: 'Role', body: '<strong>HCP Cluster Ingress Operator</strong> (<code>0336e1d3-7a87-462b-b6db-342b63f7802c</code>).' },
+    { title: 'Scope', body: 'Customer Subnet. Manages ingress controller networking.' },
+    { title: 'Purpose', body: 'Configures HAProxy router load balancer and DNS entries.' },
+  ]},
+  'mi-disk-csi': { color: '#14b8a6', title: 'disk-csi-driver (CP)', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-cp-disk-csi-driver-{suffix}</code>.' },
+    { title: 'Role', body: '<strong>Reader</strong> on Resource Group.' },
+    { title: 'Federation', body: 'Has Federated Credential for dataplane disk-csi-driver (OIDC).' },
+    { title: 'Purpose', body: 'Discovers Azure Disk resources for PersistentVolume provisioning.' },
+  ]},
+  'mi-file-csi': { color: '#14b8a6', title: 'file-csi-driver (CP)', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-cp-file-csi-driver-{suffix}</code>.' },
+    { title: 'Role', body: '<strong>HCP File Storage Operator</strong> (<code>0d7aedc0-15fd-4a67-a412-efad370c947e</code>).' },
+    { title: 'Scope', body: 'Customer Subnet + NSG. Manages Azure Files storage accounts.' },
+    { title: 'Federation', body: 'Has Federated Credential for dataplane file-csi-driver (OIDC).' },
+  ]},
+  'mi-image-registry': { color: '#14b8a6', title: 'image-registry (CP)', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-cp-image-registry-{suffix}</code>.' },
+    { title: 'Role', body: '<strong>Reader</strong> on Resource Group.' },
+    { title: 'Federation', body: 'Has Federated Credential for dataplane image-registry (OIDC).' },
+    { title: 'Purpose', body: 'Discovers storage accounts for the internal OpenShift image registry.' },
+  ]},
+  'mi-network': { color: '#14b8a6', title: 'cloud-network-config', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-cp-cloud-network-config-{suffix}</code>.' },
+    { title: 'Role', body: '<strong>HCP Network Operator</strong> (<code>be7a6435-15ae-4171-8f30-4a343eff9e8f</code>).' },
+    { title: 'Scope', body: 'Customer Subnet + VNet. Manages OVN/Cilium network configuration.' },
+    { title: 'Purpose', body: 'Configures overlay networking, egress IPs, and network policies.' },
+  ]},
+  'mi-service': { color: '#14b8a6', title: 'service (coordination)', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-cp-service-{suffix}</code>. Broadest permissions.' },
+    { title: 'Roles', body: '<strong>HCP Service MI</strong> (<code>c0ff367d-66d8-445e-917c-583feb0ef0d4</code>) + <strong>Network Contributor</strong> (<code>4d97b98b-1d4f-4787-a291-c67834d212e7</code>).' },
+    { title: 'Scope', body: 'VNet + NSG + <strong>Reader on all other MIs</strong>. The Reader grants are for coordination/discovery.' },
+    { title: 'Purpose', body: 'Initial cluster setup, VNet integration, subnet delegation. Network Contributor is temporary for setup phase.' },
+  ]},
+  'mi-dp-disk': { color: '#4ade80', title: 'disk-csi-driver (dataplane)', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-dp-disk-csi-driver-{suffix}</code>. Runs on worker nodes.' },
+    { title: 'Federation', body: 'OIDC Federated Credential → CP disk-csi-driver identity.' },
+    { title: 'How', body: 'Worker pod → OIDC token → Azure AD validates → grants CP disk-csi MI credentials → manages Azure Disks.' },
+    { title: 'Purpose', body: 'PersistentVolume provisioning with Azure Disks on worker nodes.' },
+  ]},
+  'mi-dp-file': { color: '#4ade80', title: 'file-csi-driver (dataplane)', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-dp-file-csi-driver-{suffix}</code>. Runs on worker nodes.' },
+    { title: 'Federation', body: 'OIDC Federated Credential → CP file-csi-driver identity.' },
+    { title: 'How', body: 'Same OIDC pattern. Worker pod → token → Azure AD → CP file-csi MI → manages Azure Files.' },
+    { title: 'Purpose', body: 'Azure Files PersistentVolume provisioning. Supports ReadWriteMany access mode.' },
+  ]},
+  'mi-dp-registry': { color: '#4ade80', title: 'image-registry (dataplane)', cards: [
+    { title: 'Identity', body: '<code>{clusterName}-dp-image-registry-{suffix}</code>. Runs on worker nodes.' },
+    { title: 'Federation', body: 'OIDC Federated Credential → CP image-registry identity.' },
+    { title: 'How', body: 'Worker pods running image registry use OIDC to get Azure credentials for the backing storage account.' },
+    { title: 'Purpose', body: 'Internal OpenShift image registry push/pull to Azure Storage Account.' },
+  ]},
+};
+
+var activeNode = null;
+function selectNode(id) {
+  document.querySelectorAll('.nb.active').forEach(function(el) { el.classList.remove('active'); });
+  activeNode = id;
+  var box = document.getElementById('box-' + id);
+  if (box) box.classList.add('active');
+  var data = nodeData[id];
+  if (!data) return;
+  document.getElementById('detail-hint').style.display = 'none';
+  var content = document.getElementById('detail-content');
+  content.style.display = 'grid';
+  var panel = document.getElementById('detail-panel');
+  var existing = panel.querySelector('h3');
+  if (existing) existing.remove();
+  var h3 = document.createElement('h3');
+  h3.innerHTML = '<div class="dot" style="background:' + data.color + '"></div>' + data.title;
+  panel.insertBefore(h3, content);
+  content.innerHTML = data.cards.map(function(c) {
+    return '<div class="detail-card"><div class="detail-card-title">' + c.title + '</div><div class="detail-card-body">' + c.body + '</div></div>';
+  }).join('');
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+</body>
+</html>
